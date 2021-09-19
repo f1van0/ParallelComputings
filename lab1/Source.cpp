@@ -600,7 +600,7 @@ void Task3()
 	double time;
 	double time1, time2;
 	string name1, name2, name3;
-	int iterations = 20; // минимум 20
+	int iterations = 50; // минимум 20
 	double trustedAverageTime1 = 0;
 	double trustedAverageTime2 = 0;
 	double trustedAverageTime3 = 0;

@@ -2,10 +2,8 @@
 //
 
 #include <iostream>
-#include <string>
+#include <string.h>
 #include <omp.h>
-
-using namespace std;
 
 // Определение типа для функций тестирования (имеют общуу структуру но вызывают соответствующие функции)
 typedef double(*TestFunctTempl)(double*&, double*&, double*&, int&);
@@ -128,9 +126,9 @@ double AvgTrustedInterval(double& avg, double*& times, int& cnt)
 }
 
 
-void test_functions(void** Functions, string(&function_names)[4], int size, int iterations)
+void test_functions(void** Functions, std::string(&function_names)[4], int size, int iterations)
 {
-	double* a, *b, *c;
+	double* a, * b, * c;
 	a = new double[size];
 	b = new double[size];
 	c = new double[size];
@@ -141,7 +139,7 @@ void test_functions(void** Functions, string(&function_names)[4], int size, int 
 
 	// Вывод результатов замера (можно организовать вывод в файл)
 	for (int i = 0; i < 4; i++)
-		cout << function_names[i] << "\t" << Functions_time_ms[i] << " ms." << endl;
+		std::cout << function_names[i] << "\t" << Functions_time_ms[i] << " ms." << std::endl;
 	delete[]a;
 	delete[]b;
 	delete[]c;
@@ -149,8 +147,8 @@ void test_functions(void** Functions, string(&function_names)[4], int size, int 
 
 int main()
 {
-	void** Functions = new void*[4]{ TestFillarr1 ,TestFillarr2,TestSum,TestElArrSum };
-	string  function_names[4]{ "Заполнение вар 1","Заполнение вар 2","Сумма массивов A и B вар 1","Сумма элементов массива С вар 1" };
+	void** Functions = new void* [4]{ TestFillarr1 ,TestFillarr2,TestSum,TestElArrSum };
+	std::string  function_names[4]{ "Заполнение вар 1","Заполнение вар 2","Сумма массивов A и B вар 1","Сумма элементов массива С вар 1" };
 	setlocale(LC_ALL, "Russian");
 	test_functions(Functions, function_names, 100000, 2000);
 }
