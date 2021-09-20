@@ -96,18 +96,12 @@ struct Vector
 	}
 };
 
-void Test(int*& a)
-{
-	a = a + 1;
-}
-
 void FillConsistently(Vector& vector, double& time)
 {
 	double time_Start = omp_get_wtime();
 	for (int i = 0; i < vector.length; i++)
 	{
-		int x = 1 + rand() % 10;
-		vector.numbers[i] = pow(x, 2 / 3) * (cos(x) / atan(x));
+		vector.numbers[i] = pow(i, 3 / 4)* cos(i) / atan(i);
 	}
 	time = omp_get_wtime() - time_Start;
 }
@@ -134,9 +128,7 @@ void FillParallel(Vector& vector, double& time)
 
 		for (int i = 0; i < part; i++)
 		{
-			int x = 1 + rand() % 10;
-			vector.numbers[startIndex + i] = pow(x, 2 / 3) * (cos(x) / atan(x));
-			//cout << "Заполение " << startIndex + i << " ячейки\n";
+			vector.numbers[startIndex + i] = pow(i, 3 / 4)* cos(i) / atan(i);
 		}
 	}
 
