@@ -73,7 +73,7 @@ double CalculatePiParallelForStatic(long num_steps, double& time)
 	step = 1.0 / (double)num_steps;
 	double startTime, endTime;
 	startTime = omp_get_wtime();
-#pragma omp for schedule(static)
+#pragma omp schedule(static) for
 	{
 		for (i = 0; i < num_steps; i++)
 		{
@@ -95,7 +95,7 @@ double CalculatePiParallelForDynamic(long num_steps, double& time)
 	step = 1.0 / (double)num_steps;
 	double startTime, endTime;
 	startTime = omp_get_wtime();
-#pragma omp for schedule(dynamic)
+#pragma omp schedule(dynamic) for
 	{
 		for (i = 0; i < num_steps; i++)
 		{
@@ -117,7 +117,7 @@ double CalculatePiParallelForGuided(long num_steps, double& time)
 	step = 1.0 / (double)num_steps;
 	double startTime, endTime;
 	startTime = omp_get_wtime();
-#pragma omp for schedule(guided)
+#pragma omp schedule(guided) for
 	{
 		for (i = 0; i < num_steps; i++)
 		{
@@ -230,15 +230,26 @@ double CalculatePiFuncTrustedTime(void* func, long num_steps, double& time, int 
 
 void Task1()
 {
-	string* funcsNames = new string[6]{"Последовательная реализация", "Параллельная реализация FOR (static)", "Параллельная реализация FOR (dynamic)", "Параллельная реализация FOR (guided)", "Свой алгоритм"};
+	string* funcsNames = new string[6]{"Последовательная реализация", "Параллельная реализация FOR (static)", "Параллельная реализация FOR (dynamic)", "Параллельная реализация FOR (guided)", "Параллельная реализация Sections", "Свой алгоритм"};
 	void** funcs = new void* [6]{ CalculatePiConsistenty, CalculatePiParallelForStatic, CalculatePiParallelForDynamic, CalculatePiParallelForGuided, CalculatePiParallelSections, CalculatePiMyAlgorithm};
-	static long num_steps = 500000;
+	
+	static long* nums_steps = new long[4]{1000000, 5000000, 10000000, 15000000};
 	double time, pi;
-	for (int i = 0; i < 6; i++)
+	for (int d = 0; d < 4; d++)
 	{
-		time = 0;
-		pi = CalculatePiFuncTrustedTime(funcs[i], num_steps, time, 50);
-		cout << funcsNames[i] << " .Число Пи = " << pi << " .Времени затрачено: " << GetTime(time) << endl;
+		cout << "НД:" << nums_steps[d] << endl;
+		for (int t = 2; t < 5; t++)
+		{
+			omp_set_num_threads(t);
+			cout << "Число потоков:" << t << endl;
+			for (int i = 0; i < 6; i++)
+			{
+				time = 0;
+				pi = CalculatePiFuncTrustedTime(funcs[i], nums_steps[d], time, 50);
+				cout << funcsNames[i] << " .Число Пи = " << pi << " .Времени затрачено: " << GetTime(time) << endl;
+			}
+			cout << endl;
+		}
 	}
 }
 
@@ -255,6 +266,8 @@ int main()
 
 	if (choice == 1)
 	{
+		Task1();
+		/*
 		int numThreads;
 		cout << "Введите количество потоков. Максимальное доступное количество потоков - " << omp_get_max_threads() << endl;
 		cin >> numThreads;
@@ -262,10 +275,11 @@ int main()
 		cout << "Вывод с помощью [1]: printf [2]: cout\n";
 		cin >> choice;
 
-		//if (choice == 1)
 			//Task1PrintfHelloWorld(numThreads);
 		//else
 			//Task1CoutHelloWorld(numThreads);
+		if (choice == 1)
+		*/
 	}
 	else if (choice == 2)
 	{
