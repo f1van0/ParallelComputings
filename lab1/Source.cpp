@@ -9,6 +9,7 @@
 
 using namespace std;
 
+//Возвращает время в виде десятичной дроби с 4 знаками после запятой. Время в милисекундах
 string GetTime(double time)
 {
 	char buffer[_MAX_U64TOSTR_BASE2_COUNT];
@@ -23,6 +24,7 @@ string GetTime(double time)
 	return result;
 }
 
+//Расчет доверительного интервала
 double AvgTrustedInterval(double& avg, double*& times, int& cnt)
 {
 	double sd = 0, newAVg = 0;
@@ -45,21 +47,7 @@ double AvgTrustedInterval(double& avg, double*& times, int& cnt)
 	return newAVg / newCnt;
 }
 
-void TestPrintfHelloWorld()
-{
-	printf("Hello, World!\n");
-#pragma omp parallel num_threads (4)
-	{
-		int i, n;
-		i = omp_get_thread_num();
-		n = omp_get_num_threads();
-		printf("I’m thread %d of %d\n", i, n);
-	}
-
-	int wait;
-	scanf("%d", &wait);
-}
-
+//Задание 1: Вывод Hello World через printf
 void Task1PrintfHelloWorld(int numThreads)
 {
 	//вывод с помощью printf и parallel for
@@ -69,15 +57,17 @@ void Task1PrintfHelloWorld(int numThreads)
 	}
 }
 
+//Задание 1: Вывод Hello World через cout
 void Task1CoutHelloWorld(int numThreads)
 {
-	//вывод с помощью printf и parallel for
+	//вывод с помощью cout и parallel for
 #pragma omp parallel num_threads(numThreads)
 	{
 		cout << "\nHello World! from thread " << omp_get_thread_num() << " of " << omp_get_max_threads() << endl;
 	}
 }
 
+//Вектор из length составляющих
 struct Vector
 {
 	double* numbers;
@@ -94,8 +84,14 @@ struct Vector
 		numbers = new double[_length];
 		length = _length;
 	}
+
+	~Vector()
+	{
+		
+	}
 };
 
+//Заполнить вектор последовательно
 void FillConsistently(Vector& vector, double& time)
 {
 	double time_Start = omp_get_wtime();
@@ -106,6 +102,7 @@ void FillConsistently(Vector& vector, double& time)
 	time = omp_get_wtime() - time_Start;
 }
 
+//Заполнить вектор параллельно
 void FillParallel(Vector& vector, double& time)
 {
 	double time_Start = omp_get_wtime();
@@ -135,6 +132,7 @@ void FillParallel(Vector& vector, double& time)
 	time = omp_get_wtime() - time_Start;
 }
 
+//Суммирование векторов последовательно
 void VectorsSumConsistently(Vector vector1, Vector vector2, Vector& resultVector, double& time)
 {
 	double time_Start = omp_get_wtime();
@@ -145,6 +143,7 @@ void VectorsSumConsistently(Vector vector1, Vector vector2, Vector& resultVector
 	time = omp_get_wtime() - time_Start;
 }
 
+//Суммирование векторов параллельно с помощью for
 void VectorsSumParallelFor(Vector vector1, Vector vector2, Vector& resultVector, double& time)
 {
 	double time_Start = omp_get_wtime();
@@ -156,57 +155,56 @@ void VectorsSumParallelFor(Vector vector1, Vector vector2, Vector& resultVector,
 	time = omp_get_wtime() - time_Start;
 }
 
+//Суммирование векторов параллельно с помощью секций
 void VectorsSumParallelSections(Vector vector1, Vector vector2, Vector& resultVector, double& time, int numThreads)
 {
 	int s1, s2, s3;
 	s1 = vector1.length / numThreads;
-	s2 = vector1.length;
-	s3 = vector1.length;
+	s2 = vector1.length * 2 / numThreads;
+	s3 = vector1.length * 3 / numThreads;
 
-	if (numThreads == 3)
-	{
-		s2 = vector1.length / numThreads * 2;
-	}
-	else if (numThreads == 4)
-	{
-		s3 = vector1.length / numThreads * 3;
-	}
-	
 	double time_Start = omp_get_wtime();
+//#pragma omp parralel 
+//	{
 #pragma omp sections
-	{
-#pragma omp section
 		{
-			for (int i = 0; i < s1; i++)
+#pragma omp section
 			{
-				resultVector.numbers[i] = vector1.numbers[i] + vector2.numbers[i];
+				for (int i = 0; i < s1; i++)
+				{
+					resultVector.numbers[i] = vector1.numbers[i] + vector2.numbers[i];
+				}
+			}
+#pragma omp section
+			{
+				if (numThreads > 1)
+					for (int i = s1; i < s2; i++)
+					{
+						resultVector.numbers[i] = vector1.numbers[i] + vector2.numbers[i];
+					}
+			}
+#pragma omp section
+			{
+				if (numThreads > 2)
+					for (int i = s2; i < s3; i++)
+					{
+						resultVector.numbers[i] = vector1.numbers[i] + vector1.numbers[i];
+					}
+			}
+#pragma omp section
+			{
+				if (numThreads > 3)
+					for (int i = s3; i < vector1.length; i++)
+					{
+						resultVector.numbers[i] = vector1.numbers[i] + vector2.numbers[i];
+					}
 			}
 		}
-#pragma omp section
-		{
-			for (int i = s1; i < s2; i++)
-			{
-				resultVector.numbers[i] = vector1.numbers[i] + vector2.numbers[i];
-			}
-		}
-#pragma omp section
-		{
-			for (int i = s2; i < s3; i++)
-			{
-				resultVector.numbers[i] = vector1.numbers[i] + vector1.numbers[i];
-			}
-		}
-#pragma omp section
-		{
-			for (int i = s3; i < vector1.length; i++)
-			{
-				resultVector.numbers[i] = vector1.numbers[i] + vector2.numbers[i];
-			}
-		}
-	}
+//	}
 	time = omp_get_wtime() - time_Start;
 }
 
+//Получение суммы элементов итогового вектора последовательно
 void MagnitudeVectorConsistently(Vector vector, double& sum, double& time)
 {
 	sum = 0;
@@ -218,6 +216,7 @@ void MagnitudeVectorConsistently(Vector vector, double& sum, double& time)
 	time = omp_get_wtime() - time_Start;
 }
 
+//Получение суммы элементов итогового вектора параллельно с помощью редукторов
 void MagnitudeVectorReductor(Vector vector, double& sum, double& time)
 {
 	double result = 0;
@@ -234,12 +233,13 @@ void MagnitudeVectorReductor(Vector vector, double& sum, double& time)
 	time = omp_get_wtime() - time_Start;
 }
 
+//Получение суммы элементов итогового вектора с поощью критических секций
 void MagnitudeVectorCritical(Vector vector, double& sum, double& time)
 {
 	sum = 0;
 	int size = vector.length;
 	double time_Start = omp_get_wtime();
-#pragma omp for
+#pragma omp parallel for
 	for (int i = 0; i < size; i++)
 	{
 #pragma omp critical
@@ -250,6 +250,7 @@ void MagnitudeVectorCritical(Vector vector, double& sum, double& time)
 	time = omp_get_wtime() - time_Start;
 }
 
+//Функция, выполняющая задание 2
 void Task2()
 {
 	int nVectors = 2;
@@ -372,6 +373,7 @@ void Task2()
 	cout << "Суммирование итогового вектора. Параллельно с критическими секциями. " << GetTime(avgTimeT * 1000) << endl;
 }
 
+//Класс, описывающий одно вычисление времени time при обработке dataAmount данных
 struct CalcInfo
 {
 	int dataAmount;
@@ -390,6 +392,7 @@ struct CalcInfo
 	}
 };
 
+//Класс, описывающий все замеры, записанные в list<CalcInfo> для количества потоков threadsNum
 class CalcPerThread
 {
 	list<CalcInfo> calcInfos;
@@ -446,6 +449,7 @@ public:
 	}
 };
 
+//Класс, описывающий все замеры со всеми потоками у определенной функции с названием name
 class UnitMethod
 {
 public:
@@ -518,6 +522,7 @@ public:
 	}
 };
 
+//Класс, описывающий все замеры для всех функций из списка функций
 class CalcData
 {
 	list<UnitMethod> methods;
@@ -570,6 +575,7 @@ public:
 	}
 };
 
+//Вывод результатов замеров на экран и в файл (вывод всех комбинаций функций, которые отрабатывали одна за другой)
 void PrintResult(string name1, string name2, string name3, double time, int nA, int nT, string fileName)
 {
 	cout << "[" << name1 << "] [" << name2 << "] [" << name3 << "]. Потоков: " << nT << " Времени потрачено: " << GetTime(time * 1000) << endl;
@@ -580,6 +586,7 @@ void PrintResult(string name1, string name2, string name3, double time, int nA, 
 	resultsFile.close();
 }
 
+//Функция выполняет 3 задание
 void Task3()
 {
 	CalcData calcData;
@@ -588,11 +595,11 @@ void Task3()
 	resultsFile.open(fileName, std::ios_base::out);
 	resultsFile << "Способ заполнения;Способ суммирования;Способ подсчета итогового вектора;Количество потоков;Время работы\n";
 	resultsFile.close();
-	int* numbersAmount = new int[4]{750000, 1000000, 1250000, 1500000};
+	int* numbersAmount = new int[4]{500000, 1000000, 1500000, 1000000 };
 	double time;
 	double time1, time2;
 	string name1, name2, name3;
-	int iterations = 50; // минимум 20
+	int iterations = 30; // минимум 20
 	double trustedAverageTime1 = 0;
 	double trustedAverageTime2 = 0;
 	double trustedAverageTime3 = 0;
@@ -609,29 +616,29 @@ void Task3()
 
 			for (int j = 0; j < 2; j++)
 			{
-				Vector vector1(numbersAmount[nA]);
-				Vector vector2(numbersAmount[nA]);
+				Vector* vector1 = new Vector(numbersAmount[nA]);
+				Vector* vector2 = new Vector(numbersAmount[nA]);
 				double averageTime = 0;
 				for (int iter = 0; iter < iterations; iter++)
 				{
-					vector1 = Vector(numbersAmount[nA]);
-					vector2 = Vector(numbersAmount[nA]);
+					vector1 = new Vector(numbersAmount[nA]);
+					vector2 = new Vector(numbersAmount[nA]);
 
 					switch (j)
 					{
 						case 0:
 						{
 							name1 = "Последоватьное заполнение";
-							FillConsistently(vector1, time);
-							FillConsistently(vector2, time);
+							FillConsistently(*vector1, time);
+							FillConsistently(*vector2, time);
 
 							break;
 						}
 						default:
 						{
 							name1 = "Параллельное заполнение";
-							FillParallel(vector1, time);
-							FillParallel(vector2, time);
+							FillParallel(*vector1, time);
+							FillParallel(*vector2, time);
 
 							break;
 						}
@@ -648,34 +655,33 @@ void Task3()
 					calcData.Add(name1, 0, time, numbersAmount[nA]);
 				else
 					calcData.Add(name1, nT, time, numbersAmount[nA]);
-				//Почему там аргументы превращаются в мусор?
 
 				for (int t = 0; t < 3; t++)
 				{
 					averageTime = 0;
-					Vector resultVector(numbersAmount[nA]);
+					Vector* resultVector = new Vector(numbersAmount[nA]);
 					for (int iter = 0; iter < iterations; iter++)
 					{
-						resultVector = Vector(numbersAmount[nA]);
+						resultVector = new Vector(numbersAmount[nA]);
 
 						switch (t)
 						{
 						case 0:
 						{
 							name2 = "Последоватьное суммирование";
-							VectorsSumConsistently(vector1, vector2, resultVector, time);
+							VectorsSumConsistently(*vector1, *vector2, *resultVector, time);
 							break;
 						}
 						case 1:
 						{
 							name2 = "Параллельное суммирование с for";
-							VectorsSumParallelFor(vector1, vector2, resultVector, time);
+							VectorsSumParallelFor(*vector1, *vector2, *resultVector, time);
 							break;
 						}
 						default:
 						{
 							name2 = "Параллельное суммирование с sections";
-							VectorsSumParallelSections(vector1, vector2, resultVector, time, omp_get_num_threads());
+							VectorsSumParallelSections(*vector1, *vector2, *resultVector, time, omp_get_num_threads());
 							break;
 						}
 						}
@@ -705,19 +711,19 @@ void Task3()
 							case 0:
 							{
 								name3 = "Последоватьный подсчет суммы";
-								MagnitudeVectorConsistently(resultVector, sum, time);
+								MagnitudeVectorConsistently(*resultVector, sum, time);
 								break;
 							}
 							case 1:
 							{
 								name3 = "Параллельный (с редукторами) подсчет суммы";
-								MagnitudeVectorReductor(resultVector, sum, time);
+								MagnitudeVectorReductor(*resultVector, sum, time);
 								break;
 							}
 							default:
 							{
 								name3 = "Параллельный (с крит. секциями) подсчет суммы";
-								MagnitudeVectorCritical(resultVector, sum, time);
+								MagnitudeVectorCritical(*resultVector, sum, time);
 								break;
 							}
 							}
@@ -736,6 +742,9 @@ void Task3()
 						if (nA == 1) PrintResult(name1, name2, name3, trustedAverageTime1 + trustedAverageTime2 + trustedAverageTime3, nA, nT, fileName);
 					}
 				}
+
+				delete vector1;
+				delete vector2;
 			}
 		}
 	}
