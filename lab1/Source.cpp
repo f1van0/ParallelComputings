@@ -6,6 +6,7 @@
 #include <Math.h>
 #include <fstream>
 #include <list>
+#include <vector>
 
 using namespace std;
 
@@ -66,10 +67,12 @@ void Task1CoutHelloWorld(int numThreads)
 		cout << "\nHello World! from thread " << omp_get_thread_num() << " of " << omp_get_max_threads() << endl;
 	}
 }
-
+/*
+*/
 //Вектор из length составляющих
-struct Vector
+class Vector
 {
+public:
 	double* numbers;
 	int length;
 
@@ -87,7 +90,7 @@ struct Vector
 
 	~Vector()
 	{
-		
+		//delete[] numbers;
 	}
 };
 
@@ -586,6 +589,137 @@ void PrintResult(string name1, string name2, string name3, double time, int nA, 
 	resultsFile.close();
 }
 
+void CalculateAllFuncs(int iterations, int numbersAmount, int j, int nA, int nT, string& name1, string& name2, string& name3, CalcData& calcData, string fileName)
+{
+	Vector* vector1 = new Vector(numbersAmount);
+	Vector* vector2 = new Vector(numbersAmount);
+	double* timeCalculations1 = new double[iterations];
+	double*timeCalculations2 = new double[iterations];
+	double* timeCalculations3 = new double[iterations];
+	double trustedAverageTime1, trustedAverageTime2, trustedAverageTime3;
+	double time = 0, time1 = 0, time2 = 0, time3 = 0;
+	double averageTime = 0;
+	for (int iter = 0; iter < iterations; iter++)
+	{
+		switch (j)
+		{
+		case 0:
+		{
+			name1 = "Последоватьное заполнение";
+			FillConsistently(*vector1, time);
+			FillConsistently(*vector2, time);
+
+			break;
+		}
+		default:
+		{
+			name1 = "Параллельное заполнение";
+			FillParallel(*vector1, time);
+			FillParallel(*vector2, time);
+
+			break;
+		}
+		}
+
+		timeCalculations1[iter] = time;
+		averageTime += time;
+	}
+	averageTime = averageTime / iterations;
+	trustedAverageTime1 = AvgTrustedInterval(averageTime, timeCalculations1, iterations);
+
+	time1 = time;
+	if (j == 0)
+		calcData.Add(name1, 0, time, numbersAmount);
+	else
+		calcData.Add(name1, nT, time, numbersAmount);
+
+	Vector* resultVector = new Vector(numbersAmount);
+	for (int t = 0; t < 3; t++)
+	{
+		averageTime = 0;
+		for (int iter = 0; iter < iterations; iter++)
+		{
+
+			switch (t)
+			{
+			case 0:
+			{
+				name2 = "Последоватьное суммирование";
+				VectorsSumConsistently(*vector1, *vector2, *resultVector, time);
+				break;
+			}
+			case 1:
+			{
+				name2 = "Параллельное суммирование с for";
+				VectorsSumParallelFor(*vector1, *vector2, *resultVector, time);
+				break;
+			}
+			default:
+			{
+				name2 = "Параллельное суммирование с sections";
+				VectorsSumParallelSections(*vector1, *vector2, *resultVector, time, omp_get_num_threads());
+				break;
+			}
+			}
+
+			timeCalculations2[iter] = time;
+			averageTime += time;
+		}
+		averageTime = averageTime / iterations;
+		trustedAverageTime2 = AvgTrustedInterval(averageTime, timeCalculations2, iterations);
+
+		time2 = time;
+
+		if (t == 0)
+			calcData.Add(name2, 0, time, numbersAmount);
+		else
+			calcData.Add(name2, nT, time, numbersAmount);
+
+		for (int i = 0; i < 3; i++)
+		{
+			averageTime = 0;
+			for (int iter = 0; iter < iterations; iter++)
+			{
+				double sum = 0;
+
+				switch (i)
+				{
+				case 0:
+				{
+					name3 = "Последоватьный подсчет суммы";
+					MagnitudeVectorConsistently(*resultVector, sum, time);
+					break;
+				}
+				case 1:
+				{
+					name3 = "Параллельный (с редукторами) подсчет суммы";
+					MagnitudeVectorReductor(*resultVector, sum, time);
+					break;
+				}
+				default:
+				{
+					name3 = "Параллельный (с крит. секциями) подсчет суммы";
+					MagnitudeVectorCritical(*resultVector, sum, time);
+					break;
+				}
+				}
+
+				timeCalculations3[iter] = time;
+				averageTime += time;
+			}
+			averageTime = averageTime / iterations;
+			trustedAverageTime3 = AvgTrustedInterval(averageTime, timeCalculations3, iterations);
+
+			if (i == 0)
+				calcData.Add(name3, 0, time, numbersAmount);
+			else
+				calcData.Add(name3, nT, time, numbersAmount);
+
+			if (nA == 1) PrintResult(name1, name2, name3, trustedAverageTime1 + trustedAverageTime2 + trustedAverageTime3, nA, nT, fileName);
+		}
+	}
+}
+
 //Функция выполняет 3 задание
 void Task3()
 {
@@ -595,7 +729,7 @@ void Task3()
 	resultsFile.open(fileName, std::ios_base::out);
 	resultsFile << "Способ заполнения;Способ суммирования;Способ подсчета итогового вектора;Количество потоков;Время работы\n";
 	resultsFile.close();
-	int* numbersAmount = new int[4]{500000, 1000000, 1500000, 1000000 };
+	int* numbersAmount = new int[4]{200000, 500000, 750000, 1000000 };
 	double time;
 	double time1, time2;
 	string name1, name2, name3;
@@ -616,135 +750,7 @@ void Task3()
 
 			for (int j = 0; j < 2; j++)
 			{
-				Vector* vector1 = new Vector(numbersAmount[nA]);
-				Vector* vector2 = new Vector(numbersAmount[nA]);
-				double averageTime = 0;
-				for (int iter = 0; iter < iterations; iter++)
-				{
-					vector1 = new Vector(numbersAmount[nA]);
-					vector2 = new Vector(numbersAmount[nA]);
-
-					switch (j)
-					{
-						case 0:
-						{
-							name1 = "Последоватьное заполнение";
-							FillConsistently(*vector1, time);
-							FillConsistently(*vector2, time);
-
-							break;
-						}
-						default:
-						{
-							name1 = "Параллельное заполнение";
-							FillParallel(*vector1, time);
-							FillParallel(*vector2, time);
-
-							break;
-						}
-					}
-
-					timeCalculations1[iter] = time;
-					averageTime += time;
-				}
-				averageTime = averageTime / iterations;
-				trustedAverageTime1 = AvgTrustedInterval(averageTime, timeCalculations1, iterations);
-
-				time1 = time;
-				if (j == 0)
-					calcData.Add(name1, 0, time, numbersAmount[nA]);
-				else
-					calcData.Add(name1, nT, time, numbersAmount[nA]);
-
-				for (int t = 0; t < 3; t++)
-				{
-					averageTime = 0;
-					Vector* resultVector = new Vector(numbersAmount[nA]);
-					for (int iter = 0; iter < iterations; iter++)
-					{
-						resultVector = new Vector(numbersAmount[nA]);
-
-						switch (t)
-						{
-						case 0:
-						{
-							name2 = "Последоватьное суммирование";
-							VectorsSumConsistently(*vector1, *vector2, *resultVector, time);
-							break;
-						}
-						case 1:
-						{
-							name2 = "Параллельное суммирование с for";
-							VectorsSumParallelFor(*vector1, *vector2, *resultVector, time);
-							break;
-						}
-						default:
-						{
-							name2 = "Параллельное суммирование с sections";
-							VectorsSumParallelSections(*vector1, *vector2, *resultVector, time, omp_get_num_threads());
-							break;
-						}
-						}
-
-						timeCalculations2[iter] = time;
-						averageTime += time;
-					}
-					averageTime = averageTime / iterations;
-					trustedAverageTime2 = AvgTrustedInterval(averageTime, timeCalculations2, iterations);
-
-					time2 = time;
-
-					if (t == 0)
-						calcData.Add(name2, 0, time, numbersAmount[nA]);
-					else
-						calcData.Add(name2, nT, time, numbersAmount[nA]);
-
-					for (int i = 0; i < 3; i++)
-					{
-						averageTime = 0;
-						for (int iter = 0; iter < iterations; iter++)
-						{
-							double sum = 0;
-
-							switch (i)
-							{
-							case 0:
-							{
-								name3 = "Последоватьный подсчет суммы";
-								MagnitudeVectorConsistently(*resultVector, sum, time);
-								break;
-							}
-							case 1:
-							{
-								name3 = "Параллельный (с редукторами) подсчет суммы";
-								MagnitudeVectorReductor(*resultVector, sum, time);
-								break;
-							}
-							default:
-							{
-								name3 = "Параллельный (с крит. секциями) подсчет суммы";
-								MagnitudeVectorCritical(*resultVector, sum, time);
-								break;
-							}
-							}
-
-							timeCalculations3[iter] = time;
-							averageTime += time;
-						}
-						averageTime = averageTime / iterations;
-						trustedAverageTime3 = AvgTrustedInterval(averageTime, timeCalculations3, iterations);
-
-						if (i == 0)
-							calcData.Add(name3, 0, time, numbersAmount[nA]);
-						else
-							calcData.Add(name3, nT, time, numbersAmount[nA]);
-
-						if (nA == 1) PrintResult(name1, name2, name3, trustedAverageTime1 + trustedAverageTime2 + trustedAverageTime3, nA, nT, fileName);
-					}
-				}
-
-				delete vector1;
-				delete vector2;
+				CalculateAllFuncs(iterations, numbersAmount[nA], j, nA, nT, name1, name2, name3, calcData, fileName);
 			}
 		}
 	}
@@ -753,6 +759,9 @@ void Task3()
 
 int main()
 {
+	Vector* test = new Vector(100);
+	delete test;
+
 	srand(time(0));
 	setlocale(LC_ALL, "Russian");
 	int choice;

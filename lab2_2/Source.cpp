@@ -55,18 +55,17 @@ double CalculatePiConsistenty(long num_steps, double& time)
 double CalculatePiParallelForStatic(long num_steps, double& time)
 {
 	double step, pi, x, sum = 0.0;
-	int i;
 	step = 1.0 / (double)num_steps;
 	double startTime, endTime;
 	startTime = omp_get_wtime();
-#pragma omp schedule(static) for
+//#pragma omp parallel
+#pragma omp parallel for schedule(static, num_steps / 12) reduction(+:sum) private(x)
+	for (int i = 0; i < num_steps; i++)
 	{
-		for (i = 0; i < num_steps; i++)
-		{
-			x = (i + 0.5) * step;
-			sum = sum + 4.0 / (1.0 + x * x);
-		}
+		x = (i + 0.5) * step;
+		sum = sum + 4.0 / (1.0 + x * x);
 	}
+		
 	pi = step * sum;
 	endTime = omp_get_wtime();
 
@@ -77,18 +76,17 @@ double CalculatePiParallelForStatic(long num_steps, double& time)
 double CalculatePiParallelForDynamic(long num_steps, double& time)
 {
 	double step, pi, x, sum = 0.0;
-	int i;
 	step = 1.0 / (double)num_steps;
 	double startTime, endTime;
 	startTime = omp_get_wtime();
-#pragma omp schedule(dynamic) for
+
+#pragma omp parallel for schedule(dynamic, num_steps / 6) reduction(+:sum) private(x)
+	for (int i = 0; i < num_steps; i++)
 	{
-		for (i = 0; i < num_steps; i++)
-		{
-			x = (i + 0.5) * step;
-			sum = sum + 4.0 / (1.0 + x * x);
-		}
+		x = (i + 0.5) * step;
+		sum = sum + 4.0 / (1.0 + x * x);
 	}
+
 	pi = step * sum;
 	endTime = omp_get_wtime();
 
@@ -99,17 +97,14 @@ double CalculatePiParallelForDynamic(long num_steps, double& time)
 double CalculatePiParallelForGuided(long num_steps, double& time)
 {
 	double step, pi, x, sum = 0.0;
-	int i;
 	step = 1.0 / (double)num_steps;
 	double startTime, endTime;
 	startTime = omp_get_wtime();
-#pragma omp schedule(guided) for
+#pragma omp parallel for schedule(guided, 10000) reduction(+:sum) private(x)
+	for (int i = 0; i < num_steps; i++)
 	{
-		for (i = 0; i < num_steps; i++)
-		{
-			x = (i + 0.5) * step;
-			sum = sum + 4.0 / (1.0 + x * x);
-		}
+		x = (i + 0.5) * step;
+		sum = sum + 4.0 / (1.0 + x * x);
 	}
 	pi = step * sum;
 	endTime = omp_get_wtime();
@@ -120,69 +115,62 @@ double CalculatePiParallelForGuided(long num_steps, double& time)
 
 double CalculatePiParallelSections(long num_steps, double& time)
 {
-	double step, pi, x, sum = 0.0;
+	double step, pi, sum = 0.0;
 	int i;
 	step = 1.0 / (double)num_steps;
-	int threadsNum = omp_get_num_threads();
+	int threadsNum;
+		
+#pragma omp parallel
+	{
+		threadsNum = omp_get_num_threads();
+	}
 	double startTime, endTime;
-	int s1 = 0, s2 = 0, s3 = 0;
-	if (threadsNum == 1)
-	{
-		s1 = num_steps;
-	}
-	else if (threadsNum >= 2)
-	{
-		s1 = num_steps / threadsNum;
-		s2 = num_steps;
-		s3 = num_steps;
+	int s1 = num_steps / threadsNum, s2 = num_steps * 2 / threadsNum, s3 = num_steps * 3 / threadsNum;
 
-		if (threadsNum >= 3)
-		{
-			s2 = num_steps / threadsNum * 2;
-
-			if (threadsNum >= 4)
-			{
-				s3 = num_steps / threadsNum * 3;
-			}
-		}
-	}
-
+	double sum1 = 0, sum2 = 0, sum3 = 0, sum4 = 0;
 	startTime = omp_get_wtime();
-#pragma omp sections
+#pragma omp sections private(i)
 	{
 #pragma omp section
 		{
-			for (i = 0; i < s1; i++)
+			double x;
+			for (int i = 0; i < s1; i++)
 			{
 				x = (i + 0.5) * step;
-				sum = sum + 4.0 / (1.0 + x * x);
+				sum1 = sum1 + 4.0 / (1.0 + x * x);
 			}
 		}
 #pragma omp section
 		{
-			for (i = s1; i < s2; i++)
+			double x;
+			for (int i = s1; i < s2; i++)
 			{
 				x = (i + 0.5) * step;
-				sum = sum + 4.0 / (1.0 + x * x);
+				sum2 = sum2 + 4.0 / (1.0 + x * x);
 			}
 		}
 #pragma omp section
 		{
-			for (i = s2; i < s3; i++)
-			{
-				x = (i + 0.5) * step;
-				sum = sum + 4.0 / (1.0 + x * x);
-			}
+			double x;
+			if (threadsNum > 2)
+				for (int i = s2; i < s3; i++)
+				{
+					x = (i + 0.5) * step;
+					sum3 = sum3 + 4.0 / (1.0 + x * x);
+				}
 		}
 #pragma omp section
 		{
-			for (i = s3; i < num_steps; i++)
-			{
-				x = (i + 0.5) * step;
-				sum = sum + 4.0 / (1.0 + x * x);
-			}
+			double x;
+			if (threadsNum > 3)
+				for (int i = s3; i < num_steps; i++)
+				{
+					x = (i + 0.5) * step;
+					sum4 = sum4 + 4.0 / (1.0 + x * x);
+				}
 		}
 	}
+	sum = sum1 + sum2 + sum3 + sum4;
 	pi = step * sum;
 
 	endTime = omp_get_wtime();
@@ -232,7 +220,7 @@ void Task1()
 			{
 				time = 0;
 				pi = CalculatePiFuncTrustedTime(funcs[i], nums_steps[d], time, 50);
-				cout << funcsNames[i] << " .Число Пи = " << pi << " .Времени затрачено: " << time * 1000<< endl;
+				cout << funcsNames[i] << " .Число Пи = " << pi << " .Времени затрачено: " << time * 1000 << endl;
 			}
 			cout << endl;
 		}
@@ -278,5 +266,5 @@ int main()
 
 	cout << endl << "Работа программы завершена" << endl;
 	string wait;
-	cin >> wait;
+	//cin >> wait;
 }

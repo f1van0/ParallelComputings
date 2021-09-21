@@ -9,20 +9,6 @@
 
 using namespace std;
 
-string GetTime(double time)
-{
-	char buffer[_MAX_U64TOSTR_BASE2_COUNT];
-	string result = _itoa(trunc(time), buffer, 10);
-	result += '.';
-	for (int i = 0; i < 4; i++)
-	{
-		time = time * 10;
-		result += _itoa((int)trunc(time) % 10, buffer, 10);
-	}
-
-	return result;
-}
-
 double AvgTrustedInterval(double& avg, double*& times, int& cnt)
 {
 	double sd = 0, newAVg = 0;
