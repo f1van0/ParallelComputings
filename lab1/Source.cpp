@@ -257,8 +257,8 @@ void MagnitudeVectorCritical(Vector vector, double& sum, double& time)
 void Task2()
 {
 	int nVectors = 2;
-	int nNumbers = 1000000;
-	int iterations = 20;
+	int nNumbers = 10000000;
+	int iterations = 30;
 	double time = 0;
 	Vector* vectors = new Vector[nVectors];
 	//Инициализация
@@ -322,17 +322,22 @@ void Task2()
 	
 	avgTime = 0, avgTimeT = 0, correctAVG = 0;;
 	Times = new double[iterations];
+
+	int numThreads = 0;
+#pragma omp parallel
+	{
+		numThreads = omp_get_max_threads();
+	}
+
 	for (int i = 0; i < iterations; i++)
 	{
-		VectorsSumParallelSections(vectors[0], vectors[1], vectorC2, time, omp_get_num_threads());
+		VectorsSumParallelSections(vectors[0], vectors[1], vectorC2, time, numThreads);
 		Times[i] = time;
 		avgTime += time;
 	}
 	avgTime /= iterations;
 	avgTimeT = AvgTrustedInterval(avgTime, Times, iterations);
 	cout << "Сложение векторов. Параллельный Sections. " << GetTime(avgTimeT * 1000) << endl;
-
-	VectorsSumParallelSections(vectors[0], vectors[1], vectorC3, time, omp_get_num_threads());
 
 	double sumC1 = 0;
 	double sumC2 = 0;
@@ -417,6 +422,11 @@ public:
 		Add(_time, _dataAmount);
 	}
 
+	CalcInfo GetFirst()
+	{
+		return calcInfos.front();
+	}
+
 	bool Find(int _dataAmount)
 	{
 		for (CalcInfo elem : calcInfos)
@@ -437,7 +447,7 @@ public:
 		}
 	}
 
-	void PrintElem(string fileName)
+	void PrintElemForDataAmount(string fileName)
 	{
 		std::ofstream resultsFile;
 		resultsFile.open(fileName, std::ios_base::app);
@@ -520,8 +530,22 @@ public:
 
 		for (CalcPerThread elem : threadCalcs)
 		{
-			elem.PrintElem(fileName);
+			elem.PrintElemForDataAmount(fileName);
 		}
+	}
+
+	void PrintElementsForThreads(string fileName)
+	{
+		std::ofstream resultsFile;
+		resultsFile.open(fileName, std::ios_base::app);
+		resultsFile << name << ";";
+
+		for (CalcPerThread elem : threadCalcs)
+		{
+			resultsFile << GetTime(elem.GetFirst().time * 1000) << ";";
+		}
+		resultsFile << endl;
+		resultsFile.close();
 	}
 };
 
@@ -569,28 +593,37 @@ public:
 	{
 		std::ofstream resultsFile;
 		resultsFile.open(fileName, std::ios_base::out);
-		resultsFile << "функция;Кол-во потоков;НД " << numbersAmount[0] << ";НД2 " << numbersAmount[1] << ";НД3 " << numbersAmount[2] << ";НД4 "<< numbersAmount[3] << endl;
+		resultsFile << "Функция (реализация);Кол-во потоков;НД " << numbersAmount[0] << ";НД2 " << numbersAmount[1] << ";НД3 " << numbersAmount[2] << ";НД4 "<< numbersAmount[3] << endl;
 		resultsFile.close();
 		for (UnitMethod elem : methods)
 		{
 			elem.PrintElem(fileName);
 		}
 	}
+
+	void PrintResultsFromThreads(string fileName)
+	{
+		std::ofstream resultsFile;
+		resultsFile.open(fileName, std::ios_base::out);
+		resultsFile << "Функция (реализация);Время;;;Sp(n);;;Ep(n);;;Cp(n);;;" << endl;
+		resultsFile << ";2;3;4;2;3;4;2;3;4;2;3;4;" << endl;
+		resultsFile.close();
+		for (UnitMethod elem : methods)
+		{
+			elem.PrintElementsForThreads(fileName);
+		}
+	}
 };
 
 //Вывод результатов замеров на экран и в файл (вывод всех комбинаций функций, которые отрабатывали одна за другой)
-void PrintResult(string name1, string name2, string name3, double time, int nA, int nT, string fileName)
+void PrintResult(string name1, string name2, string name3, double time, int nA, int nT)
 {
 	cout << "[" << name1 << "] [" << name2 << "] [" << name3 << "]. Потоков: " << nT << " Времени потрачено: " << GetTime(time * 1000) << endl;
-	
-	std::ofstream resultsFile;
-	resultsFile.open(fileName, std::ios_base::app);
-	resultsFile << name1 << ";" << name2 << ";" << name3 << ";" << nT << ";^ " << GetTime(time * 1000) << endl;
-	resultsFile.close();
 }
 
-void CalculateAllFuncs(int iterations, int numbersAmount, int j, int nA, int nT, string& name1, string& name2, string& name3, CalcData& calcData, string fileName)
+void CalculateAllFuncs(int iterations, int numbersAmount, int j, int nA, int nT, CalcData& dataAmountsCalculations, CalcData& calcDataFromCombs, string fileName)
 {
+	string name1 = "", name2 = "", name3 = "";
 	Vector* vector1 = new Vector(numbersAmount);
 	Vector* vector2 = new Vector(numbersAmount);
 	double* timeCalculations1 = new double[iterations];
@@ -629,9 +662,9 @@ void CalculateAllFuncs(int iterations, int numbersAmount, int j, int nA, int nT,
 
 	time1 = time;
 	if (j == 0)
-		calcData.Add(name1, 0, time, numbersAmount);
+		dataAmountsCalculations.Add(name1, 0, time, numbersAmount);
 	else
-		calcData.Add(name1, nT, time, numbersAmount);
+		dataAmountsCalculations.Add(name1, nT, time, numbersAmount);
 
 	Vector* resultVector = new Vector(numbersAmount);
 	for (int t = 0; t < 3; t++)
@@ -657,7 +690,7 @@ void CalculateAllFuncs(int iterations, int numbersAmount, int j, int nA, int nT,
 			default:
 			{
 				name2 = "Параллельное суммирование с sections";
-				VectorsSumParallelSections(*vector1, *vector2, *resultVector, time, omp_get_num_threads());
+				VectorsSumParallelSections(*vector1, *vector2, *resultVector, time, nT);
 				break;
 			}
 			}
@@ -671,9 +704,9 @@ void CalculateAllFuncs(int iterations, int numbersAmount, int j, int nA, int nT,
 		time2 = time;
 
 		if (t == 0)
-			calcData.Add(name2, 0, time, numbersAmount);
+			dataAmountsCalculations.Add(name2, 0, time, numbersAmount);
 		else
-			calcData.Add(name2, nT, time, numbersAmount);
+			dataAmountsCalculations.Add(name2, nT, time, numbersAmount);
 
 		for (int i = 0; i < 3; i++)
 		{
@@ -711,11 +744,16 @@ void CalculateAllFuncs(int iterations, int numbersAmount, int j, int nA, int nT,
 			trustedAverageTime3 = AvgTrustedInterval(averageTime, timeCalculations3, iterations);
 
 			if (i == 0)
-				calcData.Add(name3, 0, time, numbersAmount);
+				dataAmountsCalculations.Add(name3, 0, time, numbersAmount);
 			else
-				calcData.Add(name3, nT, time, numbersAmount);
+				dataAmountsCalculations.Add(name3, nT, time, numbersAmount);
 
-			if (nA == 1) PrintResult(name1, name2, name3, trustedAverageTime1 + trustedAverageTime2 + trustedAverageTime3, nA, nT, fileName);
+			string fullName = name1 + " " + name2 + " " + name3 + " ";
+			if (nA == 3)
+			{
+				calcDataFromCombs.Add(fullName, nT, trustedAverageTime1 + trustedAverageTime2 + trustedAverageTime3, numbersAmount);
+				PrintResult(name1, name2, name3, trustedAverageTime1 + trustedAverageTime2 + trustedAverageTime3, nA, nT);
+			}
 		}
 	}
 }
@@ -723,7 +761,8 @@ void CalculateAllFuncs(int iterations, int numbersAmount, int j, int nA, int nT,
 //Функция выполняет 3 задание
 void Task3()
 {
-	CalcData calcData;
+	CalcData dataAmountCalculations;
+	CalcData calcDataFromCombs;
 	string fileName = "results.csv";
 	std::ofstream resultsFile;
 	resultsFile.open(fileName, std::ios_base::out);
@@ -732,7 +771,6 @@ void Task3()
 	int* numbersAmount = new int[4]{200000, 500000, 750000, 1000000 };
 	double time;
 	double time1, time2;
-	string name1, name2, name3;
 	int iterations = 30; // минимум 20
 	double trustedAverageTime1 = 0;
 	double trustedAverageTime2 = 0;
@@ -750,11 +788,12 @@ void Task3()
 
 			for (int j = 0; j < 2; j++)
 			{
-				CalculateAllFuncs(iterations, numbersAmount[nA], j, nA, nT, name1, name2, name3, calcData, fileName);
+				CalculateAllFuncs(iterations, numbersAmount[nA], j, nA, nT, dataAmountCalculations, calcDataFromCombs, fileName);
 			}
 		}
 	}
-	calcData.PrintResults(numbersAmount, "resultTable.csv");
+	dataAmountCalculations.PrintResults(numbersAmount, "dataAmountsTable.csv");
+	calcDataFromCombs.PrintResultsFromThreads("combsTable.csv");
 }
 
 int main()
