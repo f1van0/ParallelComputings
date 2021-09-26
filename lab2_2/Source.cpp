@@ -47,6 +47,17 @@ public:
 		delete[] elements;
 	}
 
+	void SetToNull()
+	{
+		for (int j = 0; j < n; j++)
+		{
+			for (int i = 0; i < m; i++)
+			{
+				elements[i][j] = 0;
+			}
+		}
+	}
+
 	//Функция транспонирования матрицы
 	void Transpose()
 	{
@@ -69,6 +80,19 @@ public:
 		elements = tElements;
 	}
 };
+
+void PrintMatrix(Matrix matrix)
+{
+	for (int j = 0; j < matrix.n; j++)
+	{
+		for (int i = 0; i < matrix.m; i++)
+		{
+			cout << setw(5) << matrix.elements[i][j] << " ";
+		}
+		cout << endl;
+	}
+	cout << endl;
+}
 
 double AvgTrustedInterval(double& avg, double*& times, int& cnt)
 {
@@ -284,7 +308,7 @@ void Task1()
 			{
 				time = 0;
 				pi = CalculatePiFuncTrustedTime(funcs[i], nums_steps[d], time, 50);
-				cout << funcsNames[i] << " .Число Пи = " << pi << " .Времени затрачено: " << time * 1000 << endl;
+				cout << funcsNames[i] << ". Число Пи = " << pi << ". Времени затрачено: " << time * 1000 << endl;
 			}
 			cout << endl;
 		}
@@ -301,7 +325,7 @@ void FillLineConsistently(Matrix& matrix, double& time)
 	{
 		for (int i = 0; i < matrix.m; i++)
 		{
-			matrix.elements[i][j] = pow(i, 3 / 4)* cos(i) / atan(i) + pow(i, 3 / 4)* cos(j) / atan(j);
+			matrix.elements[i][j] = pow(i + 1, 3 / 4)* cos(i) / atan(i + 1) + pow(j + 1, 3 / 4)* cos(j) / atan(j + 1);
 		}
 	}
 	endTime = omp_get_wtime();
@@ -317,7 +341,7 @@ void FillLineParallelForStatic(Matrix& matrix, double& time)
 	{
 		for (int i = 0; i < matrix.m; i++)
 		{
-			matrix.elements[i][j] = pow(i, 3 / 4)* cos(i) / atan(i) + pow(i, 3 / 4)* cos(j) / atan(j);
+			matrix.elements[i][j] = pow(i + 1, 3 / 4)* cos(i) / atan(i + 1) + pow(j + 1, 3 / 4)* cos(j) / atan(j + 1);
 		}
 	}
 	endTime = omp_get_wtime();
@@ -333,7 +357,7 @@ void FillLineParallelForDynamic(Matrix& matrix, double& time)
 	{
 		for (int i = 0; i < matrix.m; i++)
 		{
-			matrix.elements[i][j] = pow(i, 3 / 4)* cos(i) / atan(i) + pow(i, 3 / 4)* cos(j) / atan(j);
+			matrix.elements[i][j] = pow(i + 1, 3 / 4)* cos(i) / atan(i + 1) + pow(j + 1, 3 / 4)* cos(j) / atan(j + 1);
 		}
 	}
 	endTime = omp_get_wtime();
@@ -362,7 +386,7 @@ void FillLineParallelSections(Matrix& matrix, double& time)
 			{
 				for (int i = 0; i < matrix.m; i++)
 				{
-					matrix.elements[i][j] = pow(i, 3 / 4)* cos(i) / atan(i) + pow(j, 3 / 4)* cos(j) / atan(j);
+					matrix.elements[i][j] = pow(i + 1, 3 / 4)* cos(i) / atan(i + 1) + pow(j + 1, 3 / 4)* cos(j) / atan(j + 1);
 				}
 			}
 		}
@@ -372,7 +396,7 @@ void FillLineParallelSections(Matrix& matrix, double& time)
 			{
 				for (int i = 0; i < matrix.m; i++)
 				{
-					matrix.elements[i][j] = pow(i, 3 / 4)* cos(i) / atan(i) + pow(j, 3 / 4)* cos(j) / atan(j);
+					matrix.elements[i][j] = pow(i + 1, 3 / 4)* cos(i) / atan(i + 1) + pow(j + 1, 3 / 4)* cos(j) / atan(j + 1);
 				}
 			}
 		}
@@ -384,7 +408,7 @@ void FillLineParallelSections(Matrix& matrix, double& time)
 				{
 					for (int i = 0; i < matrix.m; i++)
 					{
-						matrix.elements[i][j] = pow(i, 3 / 4)* cos(i) / atan(i) + pow(j, 3 / 4)* cos(j) / atan(j);
+						matrix.elements[i][j] = pow(i + 1, 3 / 4)* cos(i) / atan(i + 1) + pow(j + 1, 3 / 4)* cos(j) / atan(j + 1);
 					}
 				}
 			}
@@ -397,7 +421,7 @@ void FillLineParallelSections(Matrix& matrix, double& time)
 				{
 					for (int i = 0; i < matrix.m; i++)
 					{
-						matrix.elements[i][j] = pow(i, 3 / 4)* cos(i) / atan(i) + pow(j, 3 / 4)* cos(j) / atan(j);
+						matrix.elements[i][j] = pow(i + 1, 3 / 4)* cos(i) / atan(i + 1) + pow(j + 1, 3 / 4)* cos(j) / atan(j + 1);
 					}
 				}
 			}
@@ -408,10 +432,10 @@ void FillLineParallelSections(Matrix& matrix, double& time)
 	time = endTime - startTime;
 }
 
-void GetBlockStartPosition(int i, int n, int sizeX, int& shiftX, int& shiftY)
+void GetBlockStartPosition(int i, int m, int sizeX, int& shiftX, int& shiftY)
 {
-	shiftX = (i * sizeX) % n;
-	shiftY = trunc((i * sizeX) / n);
+	shiftX = (i * sizeX) % m;
+	shiftY = trunc((i * sizeX) / m) * shiftY;
 }
 
 void FillBlockParallelForStatic(Matrix& matrix, double& time)
@@ -422,19 +446,19 @@ void FillBlockParallelForStatic(Matrix& matrix, double& time)
 	int blockSizeY = 5;
 	int blocksAmount = matrix.n * matrix.m / (blockSizeX * blockSizeY);
 	int shiftX = 0, shiftY = 0;
-	int n = matrix.n;
+	int m = matrix.m;
 
 #pragma omp parallel for schedule(static, blocksAmount / 12)
 	for (int i = 0; i < blocksAmount; i++)
 	{
-		GetBlockStartPosition(i, n, blockSizeX, shiftX, shiftY);
+		GetBlockStartPosition(i, m, blockSizeX, shiftX, shiftY);
 		for (int t = 0; t < blockSizeY; t++)
 		{
 			for (int d = 0; d < blockSizeX; d++)
 			{
 				int dIndex = d + shiftX;
 				int tIndex = t + shiftY;
-				matrix.elements[dIndex][tIndex] = pow(dIndex, 3 / 4)* cos(dIndex) / atan(dIndex) + pow(tIndex, 3 / 4)* cos(tIndex) / atan(tIndex);;
+				matrix.elements[dIndex][tIndex] = pow(i + 1, 3 / 4)* cos(i) / atan(i + 1);
 			}
 		}
 	}
@@ -443,22 +467,38 @@ void FillBlockParallelForStatic(Matrix& matrix, double& time)
 	time = endTime - startTime;
 }
 
-void PrintMatrix(Matrix matrix)
+void FillBlockParallelForDynamic(Matrix& matrix, double& time)
 {
-	for (int j = 0; j < matrix.n; j++)
+	double startTime, endTime;
+	startTime = omp_get_wtime();
+	int blockSizeX = 5;
+	int blockSizeY = 5;
+	int blocksAmount = matrix.n * matrix.m / (blockSizeX * blockSizeY);
+	int shiftX = 0, shiftY = 0;
+	int m = matrix.m;
+
+#pragma omp parallel for schedule(dynamic, blocksAmount / 6)
+	for (int i = 0; i < blocksAmount; i++)
 	{
-		for (int i = 0; i < matrix.m; i++)
+		GetBlockStartPosition(i, m, blockSizeX, shiftX, shiftY);
+		for (int t = 0; t < blockSizeY; t++)
 		{
-			cout << setw(5) << (int)matrix.elements[i][j] << " ";
+			for (int d = 0; d < blockSizeX; d++)
+			{
+				int dIndex = d + shiftX;
+				int tIndex = t + shiftY;
+				matrix.elements[dIndex][tIndex] = pow(i + 1, 3 / 4)* cos(i) / atan(i + 1);
+			}
 		}
-		cout << endl;
 	}
-	cout << endl;
+
+	endTime = omp_get_wtime();
+	time = endTime - startTime;
 }
 
-void CalculateFillFuncTrustedTime(void* func, int n, int m, double& time, int iterations)
+void CalculateFillFuncTrustedTime(void* func, int m, int n, double& time, int iterations)
 {
-	Matrix* matrixA = new Matrix(n, m);
+	Matrix* matrixA = new Matrix(m, n);
 	double curtime = 0, avgTime = 0, avgTimeT = 0, correctAVG = 0;;
 	double* Times = new double[iterations];
 
@@ -472,37 +512,263 @@ void CalculateFillFuncTrustedTime(void* func, int n, int m, double& time, int it
 	avgTimeT = AvgTrustedInterval(avgTime, Times, iterations);
 	time = avgTimeT;
 }
-/*
-void CalculateMultFuncTrustedTime(void* func, int n, int m, int k, double& time, int iterations)
+
+typedef double(*MultFunctTempl)(Matrix&, Matrix&, Matrix&, double&);
+
+void MultiplicationConsistently(Matrix& matrixA, Matrix& matrixB, Matrix& matrixC, double& time)
+{
+	double startTime, endTime;
+	startTime = omp_get_wtime();
+
+	//В цикле происходит переход по строкам матрицы C
+	for (int j = 0; j < matrixB.n; j++)
+	{
+		//В цикле происходит переход по столбцам матрицы C
+		for (int i = 0; i < matrixA.n; i++)
+		{
+			matrixC.elements[i][j] = 0;
+			//В цикле происходит перемножение элементов матриц A и B на соответствующей строке
+			for (int t = 0; t < matrixA.m; t++)
+			{
+				matrixC.elements[i][j] += matrixA.elements[t][i] * matrixB.elements[t][j];
+			}
+		}
+	}
+
+	endTime = omp_get_wtime();
+	time = endTime - startTime;
+}
+
+void MultiplicationParallelForStatic(Matrix& matrixA, Matrix& matrixB, Matrix& matrixC, double& time)
+{
+	double startTime, endTime;
+	startTime = omp_get_wtime();
+
+#pragma omp parallel for schedule(static, matrixA.n / 12)
+	//В цикле происходит переход по строкам матрицы C
+	for (int j = 0; j < matrixB.n; j++)
+	{
+		//В цикле происходит переход по столбцам матрицы C
+		for (int i = 0; i < matrixA.n; i++)
+		{
+			matrixC.elements[i][j] = 0;
+			//В цикле происходит перемножение элементов матриц A и B на соответствующей строке
+			for (int t = 0; t < matrixA.m; t++)
+			{
+				matrixC.elements[i][j] += matrixA.elements[t][i] * matrixB.elements[t][j];
+			}
+		}
+	}
+
+	endTime = omp_get_wtime();
+	time = endTime - startTime;
+}
+
+void MultiplicationParallelForDynamic(Matrix& matrixA, Matrix& matrixB, Matrix& matrixC, double& time)
+{
+	double startTime, endTime;
+	startTime = omp_get_wtime();
+
+#pragma omp parallel for schedule(dynamic, matrixA.n / 6)
+	//В цикле происходит переход по строкам матрицы C
+	for (int j = 0; j < matrixB.n; j++)
+	{
+		//В цикле происходит переход по столбцам матрицы C
+		for (int i = 0; i < matrixA.n; i++)
+		{
+			matrixC.elements[i][j] = 0;
+			//В цикле происходит перемножение элементов матриц A и B на соответствующей строке
+			for (int t = 0; t < matrixA.m; t++)
+			{
+				matrixC.elements[i][j] += matrixA.elements[t][i] * matrixB.elements[t][j];
+			}
+		}
+	}
+
+	endTime = omp_get_wtime();
+	time = endTime - startTime;
+}
+
+void MultiplicationParallelSections(Matrix& matrixA, Matrix& matrixB, Matrix& matrixC, double& time)
+{
+	double startTime, endTime;
+	int numThreads = 0;
+	int s1, s2, s3;
+
+#pragma omp parallel
+	{
+		numThreads = omp_get_max_threads();
+	}
+	
+	s1 = matrixB.n / numThreads;
+	s2 = matrixB.n * 2 / numThreads;
+	s3 = matrixB.n * 3 / numThreads;
+
+	startTime = omp_get_wtime();
+#pragma omp sections
+	{
+#pragma omp section
+		{
+			for (int j = 0; j < s1; j++)
+			{
+				//В цикле происходит переход по столбцам матрицы C
+				for (int i = 0; i < matrixA.n; i++)
+				{
+					matrixC.elements[i][j] = 0;
+					//В цикле происходит перемножение элементов матриц A и B на соответствующей строке
+					for (int t = 0; t < matrixA.m; t++)
+					{
+						matrixC.elements[i][j] += matrixA.elements[t][i] * matrixB.elements[t][j];
+					}
+				}
+			}
+		}
+#pragma omp section
+		{
+			for (int j = s1; j < s2; j++)
+			{
+				//В цикле происходит переход по столбцам матрицы C
+				for (int i = 0; i < matrixA.n; i++)
+				{
+					matrixC.elements[i][j] = 0;
+					//В цикле происходит перемножение элементов матриц A и B на соответствующей строке
+					for (int t = 0; t < matrixA.m; t++)
+					{
+						matrixC.elements[i][j] += matrixA.elements[t][i] * matrixB.elements[t][j];
+					}
+				}
+			}
+		}
+#pragma omp section
+		{
+			if (numThreads > 2)
+				for (int j = s2; j < s3; j++)
+				{
+					//В цикле происходит переход по столбцам матрицы C
+					for (int i = 0; i < matrixA.n; i++)
+					{
+						matrixC.elements[i][j] = 0;
+						//В цикле происходит перемножение элементов матриц A и B на соответствующей строке
+						for (int t = 0; t < matrixA.m; t++)
+						{
+							matrixC.elements[i][j] += matrixA.elements[t][i] * matrixB.elements[t][j];
+						}
+					}
+				}
+		}
+#pragma omp section
+		{
+			if (numThreads > 3)
+				for (int j = s3; j < matrixB.n; j++)
+				{
+					//В цикле происходит переход по столбцам матрицы C
+					for (int i = 0; i < matrixA.n; i++)
+					{
+						matrixC.elements[i][j] = 0;
+						//В цикле происходит перемножение элементов матриц A и B на соответствующей строке
+						for (int t = 0; t < matrixA.m; t++)
+						{
+							matrixC.elements[i][j] += matrixA.elements[t][i] * matrixB.elements[t][j];
+						}
+					}
+				}
+		}
+	}
+
+	endTime = omp_get_wtime();
+	time = endTime - startTime;
+}
+
+void CalculateMultFuncTrustedTime(void* func, int m, int n, int k, double& time, int iterations)
 {
 	Matrix* matrixA = new Matrix(n, m);
-	Matrix* matrixB = new Matrix(m, k);
+	Matrix* matrixB = new Matrix(k, n);
 
 	//Заполнение матриц
 	FillLineConsistently(*matrixA, time);
 	FillLineConsistently(*matrixB, time);
 
-	Matrix* matrixC = new Matrix(n, k);
+	//Матрица A (n x m) умножается на матрицу B (k x n)
+	//Заранее транспанируется матрица B
+	matrixB->Transpose();
+	//Теперь матрица B транспонирована (n x k)
 
-	static long* nums_steps = new long[4]{ 1000000, 5000000, 10000000, 15000000 };
-	
+	Matrix* matrixC = new Matrix(m, k);
+
+	double curtime = 0, avgTime = 0, avgTimeT = 0, correctAVG = 0;;
+	double* Times = new double[iterations];
+
+	for (int i = 0; i < iterations; i++)
+	{
+		(*(MultFunctTempl)func)(*matrixA, *matrixB, *matrixC, curtime);
+		Times[i] = curtime;
+		avgTime += curtime;
+	}
+	avgTime /= iterations;
+	avgTimeT = AvgTrustedInterval(avgTime, Times, iterations);
+	time = avgTimeT;
 }
-*/
 
-void Task2()
+void CalculateAllFillFuncs(int m, int n)
 {
-	int* n = new int[4]{ 1000, 2000, 3000, 4000 };
-	int* m = new int[4]{ 1500, 2000, 4500, 6000 };
-	int* k = new int[4]{ 2000, 3500, 4500, 3000 };
-	
 	double time;
-	//Способы заполнения матриц TODO:
 	string* funcsNames = new string[5]{ "Ленточное последовательное заполнение", "Ленточное параллельное заполнение с for static", "Ленточное параллельное заполнение с for dynamic", "Ленточное параллельный с sections", "Блочное параллельное заполнение с for static" };
 	void** funcs = new void*[5]{ FillLineConsistently, FillLineParallelForStatic, FillLineParallelForDynamic, FillLineParallelSections, FillBlockParallelForStatic };
 
+	cout << "НД:" << n << "x" << m << endl;
+	for (int t = 2; t < 5; t++)
+	{
+		omp_set_num_threads(t);
+		cout << "Число потоков:" << t << endl;
+		for (int i = 0; i < 5; i++)
+		{
+			time = 0;
+			CalculateFillFuncTrustedTime(funcs[i], m, n, time, 30);
+			cout << funcsNames[i] << ". Времени затрачено: " << time * 1000 << endl;
+		}
+		cout << endl;
+	}
+}
+
+void CalculateAllMultFuncs(int m, int n, int k)
+{
+	double time;
+	string* funcsNames = new string[4]{ "Последовательное умножение", "Параллельное умножение с for static", "Параллельное умножение с for dynamic", "Параллельное умножение с sections" };
+	void** funcs = new void*[4]{ MultiplicationConsistently, MultiplicationParallelForStatic, MultiplicationParallelForDynamic, MultiplicationParallelSections };
+
+	cout << "НД:" << n << "x" << m << endl;
+	for (int t = 2; t < 5; t++)
+	{
+		omp_set_num_threads(t);
+		cout << "Число потоков:" << t << endl;
+		for (int i = 0; i < 4; i++)
+		{
+			time = 0;
+			CalculateMultFuncTrustedTime(funcs[i], m, n, k, time, 30);
+			cout << funcsNames[i] << ". Времени затрачено: " << time * 1000 << endl;
+		}
+		cout << endl;
+	}
+}
+
+void Task2()
+{
+	int n = 1200;
+	int m = 1300;
+	int k = 1500;
+	Matrix* matrixA = new Matrix(n, m);
+	Matrix* matrixB = new Matrix(k, n);
+	Matrix* matrixC = new Matrix(k, m);
+	double time = 0;
+
+	FillLineConsistently(*matrixA, time);
+	FillLineConsistently(*matrixB, time);
+
+	string* funcsNames = new string[1]{ "Последовательное перемножение" };
+	void** funcs = new void*[1]{ MultiplicationConsistently };
+
 	for (int d = 0; d < 4; d++)
 	{
-		cout << "НД:" << n[d] << "x" << m[d] << endl;
 		for (int t = 2; t < 5; t++)
 		{
 			omp_set_num_threads(t);
@@ -510,7 +776,7 @@ void Task2()
 			for (int i = 0; i < 5; i++)
 			{
 				time = 0;
-				CalculateFillFuncTrustedTime(funcs[i], n[d], m[d], time, 50);
+				CalculateMultFuncTrustedTime(funcs[i], n, m, k, time, 30);
 				cout << funcsNames[i] << ". Времени затрачено: " << time * 1000 << endl;
 			}
 			cout << endl;
@@ -518,11 +784,50 @@ void Task2()
 	}
 }
 
+void Task3()
+{
+	int* n = new int[4]{ 500, 750, 900, 1200 };
+	int* m = new int[4]{ 700, 750, 1000, 1300 };
+	int* k = new int[4]{ 600, 900, 1000, 1500 };
+	
+	for (int d = 0; d < 4; d++)
+	{
+		//CalculateAllFillFuncs(m[d], n[d]);
+		CalculateAllMultFuncs(m[d], n[d], k[d]);
+	}
+}
+
+/*
+void FillTest(Matrix& matrix)
+{
+	for (int j = 0; j < matrix.n; j++)
+	{
+		for (int i = 0; i < matrix.m; i++)
+		{
+			matrix.elements[i][j] = rand() % 10;
+		}
+	}
+}
+*/
+
 void main()
 {
-	srand(time(0));
+	srand(std::time(0));
 	setlocale(LC_ALL, "Russian");
 	int choice;
+	/*
+	double time;
+	Matrix* matrixA = new Matrix(2, 3);
+	Matrix* matrixB = new Matrix(4, 2);
+	Matrix* matrixC = new Matrix(4, 3);
+	FillTest(*matrixA);
+	FillTest(*matrixB);
+	PrintMatrix(*matrixA);
+	PrintMatrix(*matrixB);
+	matrixB->Transpose();
+	MultiplicationConsistently(*matrixA, *matrixB, *matrixC, time);
+	PrintMatrix(*matrixC);
+	*/
 
 	cout << "[1]: Задание 1\n"
 		<< "[2]: Задание 2\n"
@@ -548,11 +853,11 @@ void main()
 	}
 	else if (choice == 2)
 	{
-		Task2();
+		//Task2();
 	}
 	else
 	{
-		//Task3();
+		Task3();
 	}
 
 	cout << endl << "Работа программы завершена" << endl;
