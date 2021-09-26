@@ -312,7 +312,7 @@ void FillLineParallelForStatic(Matrix& matrix, double& time)
 {
 	double startTime, endTime;
 	startTime = omp_get_wtime();
-#pragma omp parallel for schedule(static, num_steps / 12)
+#pragma omp parallel for schedule(static, matrix.n / 12)
 	for (int j = 0; j < matrix.n; j++)
 	{
 		for (int i = 0; i < matrix.m; i++)
@@ -328,7 +328,7 @@ void FillLineParallelForDynamic(Matrix& matrix, double& time)
 {
 	double startTime, endTime;
 	startTime = omp_get_wtime();
-#pragma omp parallel for schedule(dynamic, num_steps / 6)
+#pragma omp parallel for schedule(dynamic, matrix.n / 6)
 	for (int j = 0; j < matrix.n; j++)
 	{
 		for (int i = 0; i < matrix.m; i++)
@@ -424,7 +424,7 @@ void FillBlockParallelForStatic(Matrix& matrix, double& time)
 	int shiftX = 0, shiftY = 0;
 	int n = matrix.n;
 
-#pragma omp parallel for schedule(static, num_steps / 12)
+#pragma omp parallel for schedule(static, blocksAmount / 12)
 	for (int i = 0; i < blocksAmount; i++)
 	{
 		GetBlockStartPosition(i, n, blockSizeX, shiftX, shiftY);
@@ -456,7 +456,7 @@ void PrintMatrix(Matrix matrix)
 	cout << endl;
 }
 
-double CalculateFillFuncTrustedTime(void* func, int n, int m, double& time, int iterations)
+void CalculateFillFuncTrustedTime(void* func, int n, int m, double& time, int iterations)
 {
 	Matrix* matrixA = new Matrix(n, m);
 	double curtime = 0, avgTime = 0, avgTimeT = 0, correctAVG = 0;;
@@ -472,7 +472,7 @@ double CalculateFillFuncTrustedTime(void* func, int n, int m, double& time, int 
 	avgTimeT = AvgTrustedInterval(avgTime, Times, iterations);
 	time = avgTimeT;
 }
-
+/*
 void CalculateMultFuncTrustedTime(void* func, int n, int m, int k, double& time, int iterations)
 {
 	Matrix* matrixA = new Matrix(n, m);
@@ -485,23 +485,9 @@ void CalculateMultFuncTrustedTime(void* func, int n, int m, int k, double& time,
 	Matrix* matrixC = new Matrix(n, k);
 
 	static long* nums_steps = new long[4]{ 1000000, 5000000, 10000000, 15000000 };
-	for (int d = 0; d < 4; d++)
-	{
-		cout << "НД:" << nums_steps[d] << endl;
-		for (int t = 2; t < 5; t++)
-		{
-			omp_set_num_threads(t);
-			cout << "Число потоков:" << t << endl;
-			for (int i = 0; i < 6; i++)
-			{
-				time = 0;
-				pi = CalculatePiFuncTrustedTime(funcs[i], nums_steps[d], time, 50);
-				cout << funcsNames[i] << " .Число Пи = " << pi << " .Времени затрачено: " << time * 1000 << endl;
-			}
-			cout << endl;
-		}
-	}
+	
 }
+*/
 
 void Task2()
 {
@@ -511,8 +497,25 @@ void Task2()
 	
 	double time;
 	//Способы заполнения матриц TODO:
-	string* funcNames = new string[5]{ "Ленточное последовательное заполнение", "Ленточное параллельное заполнение с for static", "Ленточное параллельное заполнение с for dynamic", "Ленточное параллельный с sections", "Блочное параллельное заполнение с for static" };
+	string* funcsNames = new string[5]{ "Ленточное последовательное заполнение", "Ленточное параллельное заполнение с for static", "Ленточное параллельное заполнение с for dynamic", "Ленточное параллельный с sections", "Блочное параллельное заполнение с for static" };
 	void** funcs = new void*[5]{ FillLineConsistently, FillLineParallelForStatic, FillLineParallelForDynamic, FillLineParallelSections, FillBlockParallelForStatic };
+
+	for (int d = 0; d < 4; d++)
+	{
+		cout << "НД:" << n[d] << "x" << m[d] << endl;
+		for (int t = 2; t < 5; t++)
+		{
+			omp_set_num_threads(t);
+			cout << "Число потоков:" << t << endl;
+			for (int i = 0; i < 5; i++)
+			{
+				time = 0;
+				CalculateFillFuncTrustedTime(funcs[i], n[d], m[d], time, 50);
+				cout << funcsNames[i] << ". Времени затрачено: " << time * 1000 << endl;
+			}
+			cout << endl;
+		}
+	}
 }
 
 void main()
@@ -545,7 +548,7 @@ void main()
 	}
 	else if (choice == 2)
 	{
-		//Task2();
+		Task2();
 	}
 	else
 	{
