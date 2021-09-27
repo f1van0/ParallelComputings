@@ -679,6 +679,11 @@ void MultiplicationParallelSections(Matrix& matrixA, Matrix& matrixB, Matrix& ma
 	time = endTime - startTime;
 }
 
+void MultiplicationStrassenConsistently()
+{
+
+}
+
 void CalculateMultFuncTrustedTime(void* func, int m, int n, int k, double& time, int iterations)
 {
 	Matrix* matrixA = new Matrix(n, m);

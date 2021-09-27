@@ -545,7 +545,7 @@ public:
 			for (CalcPerThread elem : threadCalcs)
 			{
 				if (elem.threadsNum == i)
-					resultsFile << GetTime(elem.GetFirst().time * 1000) << "ï" << elem.threadsNum << ";";
+					resultsFile << GetTime(elem.GetFirst().time * 1000) << "^;";
 			}
 		}
 		
@@ -798,7 +798,7 @@ void Task3()
 	}
 	dataAmountCalculations.PrintResults(numbersAmount, "dataAmountsTable.csv");
 	resultsFile;
-	resultsFile.open(fileName, std::ios_base::out);
+	resultsFile.open("combsTable.csv", std::ios_base::out);
 	resultsFile.clear();
 	resultsFile.close();
 	for (int i = 0; i < 4; i++)
