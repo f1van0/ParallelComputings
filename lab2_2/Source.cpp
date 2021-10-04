@@ -1,5 +1,6 @@
 #include <omp.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <iostream>
 #include <String>
 #include <ctime>
@@ -37,6 +38,7 @@ public:
 		this->n = n;
 	}
 
+	/*
 	~Matrix()
 	{
 		for (int i = 0; i < m; i++)
@@ -46,6 +48,7 @@ public:
 
 		delete[] elements;
 	}
+	*/
 
 	void SetToNull()
 	{
@@ -519,6 +522,7 @@ void MultiplicationConsistently(Matrix& matrixA, Matrix& matrixB, Matrix& matrix
 {
 	double startTime, endTime;
 	startTime = omp_get_wtime();
+	matrixB.Transpose();
 
 	//В цикле происходит переход по строкам матрицы C
 	for (int j = 0; j < matrixB.n; j++)
@@ -543,6 +547,7 @@ void MultiplicationParallelForStatic(Matrix& matrixA, Matrix& matrixB, Matrix& m
 {
 	double startTime, endTime;
 	startTime = omp_get_wtime();
+	matrixB.Transpose();
 
 #pragma omp parallel for schedule(static, matrixA.n / 12)
 	//В цикле происходит переход по строкам матрицы C
@@ -568,6 +573,7 @@ void MultiplicationParallelForDynamic(Matrix& matrixA, Matrix& matrixB, Matrix& 
 {
 	double startTime, endTime;
 	startTime = omp_get_wtime();
+	matrixB.Transpose();
 
 #pragma omp parallel for schedule(dynamic, matrixA.n / 6)
 	//В цикле происходит переход по строкам матрицы C
@@ -592,6 +598,9 @@ void MultiplicationParallelForDynamic(Matrix& matrixA, Matrix& matrixB, Matrix& 
 void MultiplicationParallelSections(Matrix& matrixA, Matrix& matrixB, Matrix& matrixC, double& time)
 {
 	double startTime, endTime;
+	startTime = omp_get_wtime();
+	matrixB.Transpose();
+
 	int numThreads = 0;
 	int s1, s2, s3;
 
@@ -604,7 +613,6 @@ void MultiplicationParallelSections(Matrix& matrixA, Matrix& matrixB, Matrix& ma
 	s2 = matrixB.n * 2 / numThreads;
 	s3 = matrixB.n * 3 / numThreads;
 
-	startTime = omp_get_wtime();
 #pragma omp sections
 	{
 #pragma omp section
@@ -679,9 +687,213 @@ void MultiplicationParallelSections(Matrix& matrixA, Matrix& matrixB, Matrix& ma
 	time = endTime - startTime;
 }
 
-void MultiplicationStrassenConsistently()
+int GetDimentionDegree2(int m, int n, int k)
 {
+	int maxNum = std::fmax(m, std::fmax(n, k));
+	int i = 1;
+	int log2Elements = 0;
+	while (maxNum > log2Elements)
+	{
+		log2Elements = pow(2, i);
+		i++;
+	}
 
+	return log2Elements;
+}
+
+Matrix& MatrixExtension(Matrix& matrix, int size) 
+{
+	Matrix* result = new Matrix(size, size);
+
+	for (int i = 0; i < size; i++) {
+		for (int j = 0; j < size; j++) {
+			if (i < matrix.m && i < matrix.n)
+				result->elements[i][j] = matrix.elements[i][j];
+			else
+				result->elements[i][j] = 0;
+		}
+	}
+
+	return *result;
+}
+
+struct Position
+{
+	int x;
+	int y;
+
+	Position()
+	{
+		x = 0;
+		y = 0;
+	}
+
+	Position(int _x, int _y)
+	{
+		x = _x;
+		y = _y;
+	}
+};
+
+Matrix& SumMatrix(Matrix& matrixA, Position posA, Matrix& matrixB, Position posB, int size)
+{
+	Matrix* matrixC = new Matrix(size, size);
+	for (int j = 0; j < size; j++)
+	{
+		for (int i = 0; i < size; i++)
+		{
+			matrixC->elements[i][j] = matrixA.elements[i + posA.x][j + posA.y] + matrixB.elements[i + posB.x][j + posB.y];
+		}
+	}
+
+	return *matrixC;
+}
+
+Matrix& SubMatrix(Matrix& matrixA, Position posA, Matrix& matrixB, Position posB, int size)
+{
+	Matrix* matrixC = new Matrix(size, size);
+	for (int j = 0; j < size; j++)
+	{
+		for (int i = 0; i < size; i++)
+		{
+			matrixC->elements[i][j] = matrixA.elements[i + posA.x][j + posA.y] - matrixB.elements[i + posB.x][j + posB.y];
+		}
+	}
+
+	return *matrixC;
+}
+
+Matrix* SumTMatrix(Matrix& matrixA, Matrix& matrixB)
+{
+	int size = matrixA.m;
+	Matrix* matrixC = new Matrix(size, size);
+	for (int j = 0; j < size; j++)
+	{
+		for (int i = 0; i < size; i++)
+		{
+			matrixC->elements[i][j] = matrixA.elements[i][j] + matrixB.elements[i][j];
+		}
+	}
+
+	return matrixC;
+}
+
+Matrix* SubTMatrix(Matrix& matrixA, Matrix& matrixB)
+{
+	int size = matrixA.m;
+	Matrix* matrixC = new Matrix(size, size);
+	for (int j = 0; j < size; j++)
+	{
+		for (int i = 0; i < size; i++)
+		{
+			matrixC->elements[i][j] = matrixA.elements[i][j] - matrixB.elements[i][j];
+		}
+	}
+
+	return matrixC;
+}
+
+Matrix& GetPart(Matrix& matrixA, Position posA, int size)
+{
+	Matrix* matrixC = new Matrix(size, size);
+	for (int j = 0; j < size; j++)
+	{
+		for (int i = 0; i < size; i++)
+		{
+			matrixC->elements[i][j] = matrixA.elements[i + posA.x][j + posA.y];
+		}
+	}
+
+	return *matrixC;
+}
+
+Matrix UniteMatrix(Matrix& matrix11, Matrix& matrix12, Matrix& matrix21, Matrix& matrix22)
+{
+	int size = matrix11.m;
+	Matrix* matrixC = new Matrix(size * 2, size * 2);
+	for (int j = 0; j < size; j++)
+	{
+		for (int i = 0; i < size; i++)
+		{
+			matrixC->elements[i][j] = matrix11.elements[i][j];
+			matrixC->elements[i + size][j] = matrix21.elements[i][j];
+			matrixC->elements[i][j + size] = matrix12.elements[i][j];
+			matrixC->elements[i + size][j + size] = matrix12.elements[i][j];
+		}
+	}
+
+	return *matrixC;
+}
+
+Matrix& MultMatrix(Matrix& matrixA, Matrix& matrixB)
+{
+	int size = matrixA.n;
+	Matrix* matrixC = new Matrix(size, size);
+	for (int i = 0; i < size; i++)
+	{
+		for (int j = 0; j < size; j++)
+		{
+			double tmp = 0;
+			for (int k = 0; k < size; k++)
+			{
+				tmp += matrixA.elements[k][i] * matrixB.elements[j][k];
+			}
+			matrixC->elements[i][j] = tmp;
+		}
+	}
+
+	return *matrixC;
+}
+
+Matrix& MultStrassen(Matrix& matrixA, Matrix& matrixB, int size)
+{
+	if (size <= 64) {
+		return MultMatrix(matrixA, matrixB);
+	}
+
+	size = size / 2;
+
+	//x, y
+	Position pos11(0, 0);
+	//x, y + size
+	Position pos12(0, size);
+	//x + size, y
+	Position pos21(size, 0);
+	//x + size, y + size
+	Position pos22(size, size);
+
+	Matrix* p1 = &MultStrassen(SumMatrix(matrixA, pos11, matrixB, pos22, size), SumMatrix(matrixA, pos11, matrixB, pos22, size), size);
+	Matrix* p2 = &MultStrassen(SumMatrix(matrixA, pos21, matrixB, pos22, size), GetPart(matrixB, pos11, size), size);
+	Matrix* p3 = &MultStrassen(GetPart(matrixA, pos11, size), SubMatrix(matrixB, pos12, matrixB, pos22, size), size);
+	Matrix* p4 = &MultStrassen(GetPart(matrixA, pos22, size), SubMatrix(matrixB, pos21, matrixB, pos11, size), size);
+	Matrix* p5 = &MultStrassen(SumMatrix(matrixA, pos11, matrixA, pos12, size), GetPart(matrixB, pos22, size), size);
+	Matrix* p6 = &MultStrassen(SubMatrix(matrixA, pos21, matrixA, pos11, size), SumMatrix(matrixB, pos11, matrixB, pos12, size), size);
+	Matrix* p7 = &MultStrassen(SubMatrix(matrixA, pos12, matrixA, pos22, size), SumMatrix(matrixB, pos21, matrixB, pos22, size), size);
+
+	Matrix* c11 = SumTMatrix(*SumTMatrix(*p1, *p4), *SubTMatrix(*p7, *p5));
+	Matrix* c12 = SumTMatrix(*p3, *p5);
+	Matrix* c21 = SumTMatrix(*p2, *p4);
+	Matrix* c22 = SumTMatrix(*SubTMatrix(*p1, *p2), *SumTMatrix(*p3, *p6));
+
+	Matrix* matrixC = &UniteMatrix(*c11, *c12, *c21, *c22);
+
+	return *matrixC;
+}
+
+void MultiplicationStrassenConsistently(Matrix& matrixA, Matrix& matrixB, Matrix& matrixC, double& time)
+{
+	double startTime, endTime;
+	startTime = omp_get_wtime();
+
+	int size = GetDimentionDegree2(matrixA.m, matrixA.n, matrixB.m);
+	matrixA = MatrixExtension(matrixA, size);
+	matrixB = MatrixExtension(matrixB, size);
+	matrixC = MatrixExtension(matrixC, size);
+
+	matrixC = MultStrassen(matrixA, matrixB, size);
+
+	endTime = omp_get_wtime();
+	time = endTime - startTime;
 }
 
 void CalculateMultFuncTrustedTime(void* func, int m, int n, int k, double& time, int iterations)
@@ -692,11 +904,6 @@ void CalculateMultFuncTrustedTime(void* func, int m, int n, int k, double& time,
 	//Заполнение матриц
 	FillLineConsistently(*matrixA, time);
 	FillLineConsistently(*matrixB, time);
-
-	//Матрица A (n x m) умножается на матрицу B (k x n)
-	//Заранее транспанируется матрица B
-	matrixB->Transpose();
-	//Теперь матрица B транспонирована (n x k)
 
 	Matrix* matrixC = new Matrix(m, k);
 
@@ -738,15 +945,15 @@ void CalculateAllFillFuncs(int m, int n)
 void CalculateAllMultFuncs(int m, int n, int k)
 {
 	double time;
-	string* funcsNames = new string[4]{ "Последовательное умножение", "Параллельное умножение с for static", "Параллельное умножение с for dynamic", "Параллельное умножение с sections" };
-	void** funcs = new void*[4]{ MultiplicationConsistently, MultiplicationParallelForStatic, MultiplicationParallelForDynamic, MultiplicationParallelSections };
+	string* funcsNames = new string[5]{ "Последовательное умножение", "Параллельное умножение с for static", "Параллельное умножение с for dynamic", "Параллельное умножение с sections", "Последовательное быстрое умножение (Штрассен)" };
+	void** funcs = new void*[5]{ MultiplicationConsistently, MultiplicationParallelForStatic, MultiplicationParallelForDynamic, MultiplicationParallelSections, MultiplicationStrassenConsistently };
 
 	cout << "НД:" << n << "x" << m << endl;
 	for (int t = 2; t < 5; t++)
 	{
 		omp_set_num_threads(t);
 		cout << "Число потоков:" << t << endl;
-		for (int i = 0; i < 4; i++)
+		for (int i = 0; i < 5; i++)
 		{
 			time = 0;
 			CalculateMultFuncTrustedTime(funcs[i], m, n, k, time, 30);
@@ -791,9 +998,9 @@ void Task2()
 
 void Task3()
 {
-	int* n = new int[4]{ 500, 750, 900, 1200 };
-	int* m = new int[4]{ 700, 750, 1000, 1300 };
-	int* k = new int[4]{ 600, 900, 1000, 1500 };
+	int* n = new int[4]{ 50, 750, 900, 1200 };
+	int* m = new int[4]{ 70, 750, 1000, 1300 };
+	int* k = new int[4]{ 60, 900, 1000, 1500 };
 	
 	for (int d = 0; d < 4; d++)
 	{
@@ -817,6 +1024,10 @@ void FillTest(Matrix& matrix)
 
 void main()
 {
+	//int* a = new int[5]{0, 1, 20, 13, 54};
+	//int* ptrA2 = &a[1];
+	//cout << *(ptrA2 + 3) << endl;
+
 	srand(std::time(0));
 	setlocale(LC_ALL, "Russian");
 	int choice;
