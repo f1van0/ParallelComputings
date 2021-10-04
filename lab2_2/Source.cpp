@@ -707,7 +707,8 @@ Matrix& MatrixExtension(Matrix& matrix, int size)
 
 	for (int i = 0; i < size; i++) {
 		for (int j = 0; j < size; j++) {
-			if (i < matrix.m && i < matrix.n)
+			if (i < matrix.m && j < matrix.n)
+				//Ошибка при увеличении размера MatrixC на 4 потоках 1 итерация
 				result->elements[i][j] = matrix.elements[i][j];
 			else
 				result->elements[i][j] = 0;
@@ -885,12 +886,15 @@ void MultiplicationStrassenConsistently(Matrix& matrixA, Matrix& matrixB, Matrix
 	double startTime, endTime;
 	startTime = omp_get_wtime();
 
+	int m = matrixA.m;
+	int n = matrixA.n;
+	int k = matrixB.m;
 	int size = GetDimentionDegree2(matrixA.m, matrixA.n, matrixB.m);
-	matrixA = MatrixExtension(matrixA, size);
-	matrixB = MatrixExtension(matrixB, size);
-	matrixC = MatrixExtension(matrixC, size);
+	Matrix* copyMatrixA = &MatrixExtension(matrixA, size);
+	Matrix* copyMatrixB = &MatrixExtension(matrixB, size);
+	Matrix* copyMatrixC = &MatrixExtension(matrixC, size);
 
-	matrixC = MultStrassen(matrixA, matrixB, size);
+	copyMatrixC = &MultStrassen(*copyMatrixA, *copyMatrixB, size);
 
 	endTime = omp_get_wtime();
 	time = endTime - startTime;
@@ -998,9 +1002,9 @@ void Task2()
 
 void Task3()
 {
-	int* n = new int[4]{ 50, 750, 900, 1200 };
-	int* m = new int[4]{ 70, 750, 1000, 1300 };
-	int* k = new int[4]{ 60, 900, 1000, 1500 };
+	int* n = new int[4]{ 150, 750, 900, 1200 };
+	int* m = new int[4]{ 250, 750, 1000, 1300 };
+	int* k = new int[4]{ 200, 900, 1000, 1500 };
 	
 	for (int d = 0; d < 4; d++)
 	{
