@@ -336,9 +336,9 @@ void Task1()
 	}
 }
 
-typedef double(*FillFunctTempl)(Matrix&, double&);
+typedef double(*FillFunctTempl)(Matrix, double&);
 
-void FillLineConsistently(Matrix& matrix, double& time)
+void FillLineConsistently(Matrix matrix, double& time)
 {
 	double startTime, endTime;
 	startTime = omp_get_wtime();
@@ -353,7 +353,7 @@ void FillLineConsistently(Matrix& matrix, double& time)
 	time = endTime - startTime;
 }
 
-void FillLineParallelForStatic(Matrix& matrix, double& time)
+void FillLineParallelForStatic(Matrix matrix, double& time)
 {
 	double startTime, endTime;
 	startTime = omp_get_wtime();
@@ -369,7 +369,7 @@ void FillLineParallelForStatic(Matrix& matrix, double& time)
 	time = endTime - startTime;
 }
 
-void FillLineParallelForDynamic(Matrix& matrix, double& time)
+void FillLineParallelForDynamic(Matrix matrix, double& time)
 {
 	double startTime, endTime;
 	startTime = omp_get_wtime();
@@ -385,7 +385,7 @@ void FillLineParallelForDynamic(Matrix& matrix, double& time)
 	time = endTime - startTime;
 }
 
-void FillLineParallelSections(Matrix& matrix, double& time)
+void FillLineParallelSections(Matrix matrix, double& time)
 {
 	int threadsNum;
 #pragma omp parallel
@@ -459,7 +459,7 @@ void GetBlockStartPosition(int i, int m, int sizeX, int& shiftX, int& shiftY)
 	shiftY = trunc((i * sizeX) / m) * shiftY;
 }
 
-void FillBlockConsistently(Matrix& matrix, double& time)
+void FillBlockConsistently(Matrix matrix, double& time)
 {
 	double startTime, endTime;
 	startTime = omp_get_wtime();
@@ -487,7 +487,7 @@ void FillBlockConsistently(Matrix& matrix, double& time)
 	time = endTime - startTime;
 }
 
-void FillBlockParallelForStatic(Matrix& matrix, double& time)
+void FillBlockParallelForStatic(Matrix matrix, double& time)
 {
 	double startTime, endTime;
 	startTime = omp_get_wtime();
@@ -516,7 +516,7 @@ void FillBlockParallelForStatic(Matrix& matrix, double& time)
 	time = endTime - startTime;
 }
 
-void FillBlockParallelForDynamic(Matrix& matrix, double& time)
+void FillBlockParallelForDynamic(Matrix matrix, double& time)
 {
 	double startTime, endTime;
 	startTime = omp_get_wtime();
@@ -1160,7 +1160,7 @@ Matrix MultStrassenParallel(Matrix matrixA, Matrix matrixB, int _size)
 }
 */
 
-void MultiplicationStrassenConsistently(Matrix& matrixA, Matrix& matrixB, Matrix& matrixC, double& time)
+void MultiplicationStrassenConsistently(Matrix matrixA, Matrix matrixB, Matrix& matrixC, double& time)
 {
 	double startTime, endTime;
 	startTime = omp_get_wtime();
@@ -1179,7 +1179,7 @@ void MultiplicationStrassenConsistently(Matrix& matrixA, Matrix& matrixB, Matrix
 	time = endTime - startTime;
 }
 
-void MultiplicationStrassenParallel(Matrix& matrixA, Matrix& matrixB, Matrix& matrixC, double& time)
+void MultiplicationStrassenParallel(Matrix matrixA, Matrix matrixB, Matrix& matrixC, double& time)
 {
 	double startTime, endTime;
 	startTime = omp_get_wtime();
@@ -1303,13 +1303,13 @@ void Task2()
 
 void Task3()
 {
-	int* n = new int[4]{ 850, 1750, 1500, 2000 };
-	int* m = new int[4]{ 700, 1050, 1500, 2000 };
-	int* k = new int[4]{ 650, 1000, 2000, 1900 };
+	int* n = new int[4]{ 85, 1750, 1500, 2000 };
+	int* m = new int[4]{ 70, 1050, 1500, 2000 };
+	int* k = new int[4]{ 65, 1000, 2000, 1900 };
 	
 	for (int d = 0; d < 4; d++)
 	{
-		CalculateAllFillFuncs(m[d], n[d]);
+		//CalculateAllFillFuncs(m[d], n[d]);
 		CalculateAllMultFuncs(m[d], n[d], k[d]);
 	}
 }
