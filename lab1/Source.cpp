@@ -254,7 +254,7 @@ void MagnitudeVectorCritical(Vector vector, double& sum, double& time)
 }
 
 //Функция, выполняющая задание 2
-void Task2()
+void TaskFillMultTest()
 {
 	int nVectors = 2;
 	int nNumbers = 10000000;
@@ -763,7 +763,7 @@ void CalculateAllFuncs(int iterations, int numbersAmount, int j, int nA, int nT,
 }
 
 //Функция выполняет 3 задание
-void Task3()
+void TaskFillAndMultiplyMatrix()
 {
 	CalcData dataAmountCalculations;
 	CalcData* calcDataFromCombs = new CalcData[4];
@@ -837,11 +837,11 @@ int main()
 	}
 	else if (choice == 2)
 	{
-		Task2();
+		TaskFillMultTest();
 	}
 	else
 	{
-		Task3();
+		TaskFillAndMultiplyMatrix();
 	}
 
 	cout << endl << "Работа программы завершена" << endl;

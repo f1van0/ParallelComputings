@@ -214,7 +214,7 @@ double CalculatePiFuncTrustedTime(void* func, long num_steps, double& time, int 
 	return pi;
 }
 
-void Task1()
+void TaskCalculatePi()
 {
 	string* funcsNames = new string[6]{"Последовательная реализация", "Параллельная реализация FOR (static)", "Параллельная реализация FOR (dynamic)", "Параллельная реализация FOR (guided)", "Параллельная реализация Sections", "Свой алгоритм"};
 	void** funcs = new void* [6]{ CalculatePiConsistenty, CalculatePiParallelForStatic, CalculatePiParallelForDynamic, CalculatePiParallelForGuided, CalculatePiParallelSections, CalculatePiMyAlgorithm};
@@ -252,7 +252,7 @@ int main()
 
 	if (choice == 1)
 	{
-		Task1();
+		TaskCalculatePi();
 		/*
 		int numThreads;
 		cout << "Введите количество потоков. Максимальное доступное количество потоков - " << omp_get_max_threads() << endl;
