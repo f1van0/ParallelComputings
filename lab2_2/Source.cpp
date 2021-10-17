@@ -1325,20 +1325,6 @@ void CalculateAllMultFuncs(int m, int n, int k)
 	}
 }
 
-void TaskFillMultTest()
-{
-	int n = 1200;
-	int m = 1300;
-	int k = 1500;
-	Matrix matrixA(n, m);
-	Matrix matrixB(k, n);
-	Matrix matrixC(k, m);
-	double time = 0;
-
-	CalculateAllFillFuncs(m, n);
-	CalculateAllMultFuncs(m, n, k);
-}
-
 void TaskFillAndMultiplyMatrix()
 {
 	int* n = new int[4]{ 850, 1250, 1500, 2000 };
@@ -1434,17 +1420,12 @@ void main()
 	//cout << ". Времени затрачено: " << time * 1000 << endl;
 
 	cout << "[1]: Вычисление числа Пи\n"
-		<< "[2]: Заполнение и перемножение матриц различными алгоритмами\n"
-		<< "[3]: Эксперимент. Заполнение и перемножение матриц\n";
+		<< "[2]: Эксперимент. Заполнение и перемножение матриц\n";
 	cin >> choice;
 
 	if (choice == 1)
 	{
 		TaskCalculatePi();
-	}
-	else if (choice == 2)
-	{
-		TaskFillAndMultiplyMatrix();
 	}
 	else
 	{
