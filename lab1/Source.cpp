@@ -809,9 +809,6 @@ void TaskFillAndMultiplyMatrix()
 
 int main()
 {
-	Vector* test = new Vector(100);
-	delete test;
-
 	srand(time(0));
 	setlocale(LC_ALL, "Russian");
 	int choice;
