@@ -397,9 +397,9 @@ RGBQUAD* sortRGB(RGBQUAD* arr, long length, void* sortFunc)
 		blue[i] = arr[i].rgbBlue;
 	}
 
-	(*(ByteSortFunc)sortFunc)(red, length);
-	(*(ByteSortFunc)sortFunc)(green, length);
-	(*(ByteSortFunc)sortFunc)(blue, length);
+	ShellSortParallelFor(red, length);
+	ShellSortParallelFor(green, length);
+	ShellSortParallelFor(blue, length);
 	RGBQUAD* narr = new RGBQUAD[length];
 	for (int i = 0; i < length; i++)
 		narr[i] = { blue[i], green[i],red[i], 0 };
@@ -514,11 +514,13 @@ void TaskMedianFiltering()
 	double time, timestart;
 
 	//
-	BMPRead(RGB, head, info, "C:\\Users\\vanya\\Source\\Repos\\ParallelnieVichisleniya\\lab3\\input.bmp");
+	BMPRead(RGB, head, info, "input4.bmp");
 	result = new RGBQUAD*[info.biHeight];
 	for (int i = 0; i < info.biHeight; i++)
 		result[i] = new RGBQUAD[info.biWidth];
-	medianFiltering(RGB, info.biHeight, info.biWidth, kSize[0], kSize[0], result, sortFuncs[0]);
+
+	medianFiltering(RGB, info.biHeight, info.biWidth, kSize[2], kSize[2], result, sortFuncs[0]);
+
 	BMPWrite(result, head, info, "output.bmp");
 	//
 	/*
