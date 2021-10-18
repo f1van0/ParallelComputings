@@ -5,7 +5,7 @@
 #include <ctime>
 #include <Math.h>
 #include <fstream>
-#include "BMPFileRW.h"
+//#include "BMPFileRW.h"
 
 #define Random(a, b) (double)rand() / (RAND_MAX + 1)*((b)-(a)) + (a)
 
@@ -23,36 +23,40 @@ void Swap(T& one, T& two)
 	two = temp;
 }
 
+template<class T>
+void Print10(T* arr)
+{
+	for (int i = 0; i < 10; i++)
+	{
+		cout << arr[i] << " ";
+	}
+	cout << endl;
+}
+
 //Сортировка пузырьком
 template<class T>
 void BubbleSortConsistently(T* arr, int length)
 {
-	T* narr = new T[length];
-	memcpy(narr, arr, sizeof(T)*length);
-	bool sorted = false;
 	for (int i = 0; i < length; i++)
 	{
 		for (int j = 0; j < length - i - 1; j++)
-			if (narr[j] > narr[j + 1])
+			if (arr[j] > arr[j + 1])
 			{
-				Swap(narr[j], narr[j + 1]);
+				Swap(arr[j], arr[j + 1]);
 			}
 	}
 }
 
 //Сортировка чет-нечет
 template<class T>
-void BubbleEvenSortConsistently(T* array, int length)
+void BubbleEvenSortConsistently(T* arr, int length)
 {
-	T* narr = new T[length];
-	memcpy(narr, array, sizeof(T)*length);
-	bool sorted = false;
 	for (int i = 0; i < length; i++)
 	{
 		for (int j = (i + 1) % 2; j < length - 1; j += 2)
-			if (narr[j] > narr[j + 1])
+			if (arr[j] > arr[j + 1])
 			{
-				Swap(narr[j], narr[j + 1]);
+				Swap(arr[j], arr[j + 1]);
 			}
 	}
 }
@@ -61,16 +65,13 @@ void BubbleEvenSortConsistently(T* array, int length)
 template<class T>
 void BubbleEvenSortParallelFor(T* arr, int length)
 {
-	T* narr = new T[length];
-	memcpy(narr, arr, sizeof(T)*length);
-	bool sorted = false;
 	for (int i = 0; i < length; i++)
 	{
 #pragma omp parallel for shared(i, sorted, narr,compare) 
 		for (int j = (i + 1) % 2; j < length - 1; j += 2)
-			if (narr[j] > narr[j + 1])
+			if (arr[j] > arr[j + 1])
 			{
-				Swap(narr[j], narr[j + 1]);
+				Swap(arr[j], arr[j + 1]);
 			}
 	}
 }
@@ -79,33 +80,41 @@ void BubbleEvenSortParallelFor(T* arr, int length)
 template<class T>
 void ShellSortConsistently(T *arr, int length)
 {
-	T* narr = new T[length];
-	memcpy(narr, arr, sizeof(T)*length);
 	int step, i, j;
 
 	for (step = length / 2; step > 0; step /= 2)
+	{
 		// Перечисление элементов, которые сортируются на определённом шаге
 		for (i = step; i < length; i++)
+		{
 			// Перестановка элементов внутри подсписка, пока i-тый не будет отсортирован
-			for (j = i - step; j >= 0 && narr[j] > narr[j + step]; j -= step)
-				Swap(narr[j], narr[j + step]);
+			for (j = i - step; j >= 0 && arr[j] > arr[j + step]; j -= step)
+			{
+				Swap(arr[j], arr[j + step]);
+			}
+		}
+	}
 }
 
 //Сортировка Шелла параллельная с for
 template<class T>
 void ShellSortParallelFor(T *arr, int length)
 {
-	T* narr = new T[length];
-	memcpy(narr, arr, sizeof(T)*length);
 	int step, i, j;
 
 	for (step = length / 2; step > 0; step /= 2)
+	{
 		// Перечисление элементов, которые сортируются на определённом шаге
 #pragma omp parallel for shared(narr, compare, step) private(j)
 		for (i = step; i < length; i++)
+		{
 			// Перестановка элементов внутри подсписка, пока i-тый не будет отсортирован
-			for (j = i - step; j >= 0 && narr[j] > narr[j + step]; j -= step)
-				Swap(narr[j], narr[j + step]);
+			for (j = i - step; j >= 0 && arr[j] > arr[j + step]; j -= step)
+			{
+				Swap(arr[j], arr[j + step]);
+			}
+		}
+	}
 }
 
 //Быстрая сортировка
@@ -248,6 +257,7 @@ void SortIntFuncAverageTime(void* func, int dataAmount, double& time, int iterat
 	cout << "[";
 	for (int i = 0; i < iterations; i++)
 	{
+		GetRandomValues(arr, dataAmount, -dataAmount, dataAmount);
 		startTime = omp_get_wtime();
 		(*(IntSortFunc)func)(arr, dataAmount);
 		curTime = omp_get_wtime() - startTime;
@@ -259,6 +269,7 @@ void SortIntFuncAverageTime(void* func, int dataAmount, double& time, int iterat
 	avgTime /= iterations;
 	avgTimeT = AvgTrustedInterval(avgTime, Times, iterations);
 	time = avgTimeT;
+	delete[] arr;
 }
 
 void SortDoubleFuncAverageTime(void* func, int dataAmount, double& time, int iterations)
@@ -283,6 +294,7 @@ void SortDoubleFuncAverageTime(void* func, int dataAmount, double& time, int ite
 	avgTime /= iterations;
 	avgTimeT = AvgTrustedInterval(avgTime, Times, iterations);
 	time = avgTimeT;
+	delete[] arr;
 }
 
 template<class T>
@@ -333,9 +345,169 @@ void TaskSort()
 	}
 }
 
+//заполнение медиального массива
+//image - исходная картинка
+//(x,y) - центр рамки
+//RH, RW - радиусы рамки по высоте(height) и ширине(width)
+RGBQUAD* getMedial(RGBQUAD **&image, int width, int height, int x, int y, int RH, int RW)
+{
+	int index = 0;
+	RGBQUAD* barray = new RGBQUAD[(2 * RW + 1) * (2 * RH + 1)];
+	int coordX;
+	int coordY;
+	for (int dy = -RH; dy <= RH; dy++)
+	{
+		coordY = y + dy;
+		for (int dx = -RW; dx <= RW; dx++)
+		{
+			coordX = x + dx;
+			if (coordX < 0)
+				coordX = 0;
+
+			if (coordX >= width)
+				coordX = width - 1;
+
+			if (coordY < 0)
+				coordY = 0;
+
+			if (coordY >= height)
+				coordY = height - 1;
+			barray[index] = image[coordY][coordX];
+			index++;
+		}
+	}
+	return barray;
+}
+
+//Сортировка массива РГБ
+RGBQUAD* sortRGB(RGBQUAD* arr, long length, ByteSortingMethod sort)
+{
+	BYTE *red = new BYTE[length];
+	BYTE *blue = new BYTE[length];
+	BYTE *green = new BYTE[length];
+	BYTE *red1;
+	BYTE *blue1;
+	BYTE *green1;
+	for (int i = 0; i < length; i++)
+	{
+		red[i] = arr[i].rgbRed;
+		blue[i] = arr[i].rgbBlue;
+		green[i] = arr[i].rgbGreen;
+	}
+
+	red1 = sort(red, length, AscInt);
+	blue1 = sort(blue, length, AscInt);
+	green1 = sort(green, length, AscInt);
+	delete[] red;
+	delete[] blue;
+	delete[] green;
+	RGBQUAD* narr = new RGBQUAD[length];
+	for (int i = 0; i < length; i++)
+		narr[i] = { blue1[i], green1[i],red1[i],  0 };
+	delete[] red1;
+	delete[] green1;
+	delete[] blue1;
+	return narr;
+}
+
+//сортировка массива РГБ с Omp sections+for
+RGBQUAD* sortRGBAsync(RGBQUAD* arr, long length, ByteSortingMethod sort)
+{
+	BYTE *red = new BYTE[length];
+	BYTE *blue = new BYTE[length];
+	BYTE *green = new BYTE[length];
+	BYTE *red1;
+	BYTE *blue1;
+	BYTE *green1;
+#pragma omp parallel for shared(arr, red, blue, green)
+	for (int i = 0; i < length; i++)
+	{
+		red[i] = arr[i].rgbRed;
+		blue[i] = arr[i].rgbBlue;
+		green[i] = arr[i].rgbGreen;
+	}
+#pragma omp parallel sections shared(red, blue, green, length, red1, blue1, green1)
+	{
+#pragma omp section
+		{
+			red1 = sort(red, length, AscInt);
+		}
+#pragma omp section
+		{
+			blue1 = sort(blue, length, AscInt);
+		}
+#pragma omp section
+		{
+			green1 = sort(green, length, AscInt);
+		}
+	}
+	delete[] red;
+	delete[] green;
+	delete[] blue;
+	RGBQUAD* narr = new RGBQUAD[length];
+	for (int i = 0; i < length; i++)
+		narr[i] = { blue1[i], green1[i],red1[i],  0 };
+	delete[] red1;
+	delete[] green1;
+	delete[] blue1;
+	return narr;
+}
+
+//медианная фильтрация
+//RGB - исходное изображение
+//RH, RW - радиусы рамки по вертикали и горизонтали
+//method - метод сортировки байтового массива
+//RGBresult должен быть инициализирован, в него возвращается результат
+void medianFiltering(RGBQUAD** &RGB, int height, int width, int RH, int RW, RGBQUAD** &RGBresult, ByteSortingMethod method)
+{
+	RGBQUAD *temp1, *temp2;
+	int size = (2 * RH + 1) * (2 * RW + 1);
+	for (int y = 0; y < height; y++)
+	{
+		for (int x = 0; x < width; x++)
+		{
+			//в окне H x W ложу пиксели в массив temp
+			temp1 = getMedial(RGB, width, height, x, y, RH, RW); //заполняю медиальный массив
+			temp2 = sortRGB(temp1, size, method); // сортирую каждую из компонент
+			RGBresult[y][x] = temp2[size / 2]; // вытаскиваю срединный элемент
+			delete[] temp1;
+			delete[] temp2;
+		}
+	}
+}
+
+//медианная фильтрация c распараллеливанием сортировки по компонентам
+//RGB - исходное изображение
+//RH, RW - радиусы рамки по вертикали и горизонтали
+//method - метод сортировки байтового массива
+//RGBresult должен быть инициализирован, в него возвращается результат
+void medianFilteringAsyncSort(RGBQUAD** &RGB, int height, int width, int RH, int RW, RGBQUAD** &RGBresult, ByteSortingMethod method)
+{
+	RGBQUAD *temp1, *temp2;
+	int size = (2 * RH + 1) * (2 * RW + 1);
+	for (int y = 0; y < height; y++)
+	{
+		for (int x = 0; x < width; x++)
+		{
+			//в окне H x W ложу пиксели в массив temp
+			temp1 = getMedial(RGB, width, height, x, y, RH, RW); //заполняю медиальный массив
+			temp2 = sortRGBAsync(temp1, size, method);
+			RGBresult[y][x] = temp2[size / 2]; // вытаскиваю срединный элемент
+			delete[] temp1;
+			delete[] temp2;
+		}
+	}
+}
+
 void TaskMedianFiltering()
 {
-
+	//Беру алгоритмы
+	//1 реализация - ShellSort.
+	//                          Последовательный вариант с medianFiltering + sortRGB.
+	//                          Параллельный вариант с medianFilteringAsyncSort + sortRGBAsync
+	//2 реализация - QuickSort.
+	//                          Последовательный вариант с medianFiltering + sortRGB.
+	//                          Параллельный вариант с medianFilteringAsyncSort + sortRGBAsync
 }
 
 void main()
