@@ -85,22 +85,22 @@ void BubbleEvenSortParallelFor(T* arr, int length)
 	int res;
 	do {
 		res = 0;
-#pragma omp parallel for reduction(+:arr)
+#pragma omp parallel for reduction(+:res)
 		for (int i = 0; i < length - 1; i += 2)
 		{
 			if (arr[i] > arr[i + 1])
 			{
 				Swap(arr[i], arr[i + 1]);
-				res = 1;
+				res++;
 			}
 		}
-#pragma omp parallel for reduction(+:arr)
+#pragma omp parallel for reduction(+:res)
 		for (int i = 1; i < length - 1; i += 2)
 		{
 			if (arr[i] > arr[i + 1])
 			{
 				Swap(arr[i], arr[i + 1]);
-				res = 1;
+				res++;
 			}
 		}
 	} while (res != 0);
@@ -135,7 +135,7 @@ void ShellSortParallelFor(T *arr, int length)
 	for (step = length / 2; step > 0; step /= 2)
 	{
 		// Перечисление элементов, которые сортируются на определённом шаге
-#pragma omp parallel for shared(narr, compare, step) private(j)
+#pragma omp parallel for shared(step) private(i, j)
 		for (i = step; i < length; i++)
 		{
 			// Перестановка элементов внутри подсписка, пока i-тый не будет отсортирован
@@ -177,21 +177,15 @@ void QuickSortParallelSectionsPart(T* arr, int length) {
 	p = arr[length >> 1];
 
 	do {
-#pragma omp parallel sections shared(a, i, j)
-		{
-#pragma omp section
-			{ while (arr[i] < p) i++; }
-#pragma omp section
-			{ while (arr[j] > p) j--; }
-
-		}
+		while (arr[i] < p) i++;
+		while (arr[j] > p) j--;
 		if (i <= j) {
 			Swap(arr[i], arr[j]);
 			i++; j--;
 		}
 	} while (i < j);
 
-#pragma omp parallel sections shared(j, i, a)
+#pragma omp parallel sections
 	{
 #pragma omp section
 		{
@@ -213,7 +207,7 @@ void QuickSortParallelSections(T* arr, int length) {
 	p = arr[length >> 1];
 
 	do {
-#pragma omp parallel sections shared(a, i, j)
+#pragma omp parallel sections
 		{
 #pragma omp section
 			{ while (arr[i] < p) i++; }
@@ -227,7 +221,7 @@ void QuickSortParallelSections(T* arr, int length) {
 		}
 	} while (i < j);
 
-#pragma omp parallel sections shared(j, i, a) num_threads(threads)
+#pragma omp parallel sections
 	{
 #pragma omp section
 		{
@@ -460,7 +454,7 @@ RGBQUAD* sortRGBAsync(RGBQUAD* arr, long length, void* sortFunc)
 		green[i] = arr[i].rgbGreen;
 		blue[i] = arr[i].rgbBlue;
 	}
-#pragma omp parallel sections shared(red, blue, green, length, red1, blue1, green1)
+#pragma omp parallel sections shared(red, blue, green, length)
 	{
 #pragma omp section
 		{
@@ -493,7 +487,7 @@ void MedianFiltering(RGBQUAD** &RGB, int height, int width, int kSize, RGBQUAD**
 	{
 		for (int x = 0; x < width; x++)
 		{
-			//в окне H x W ложу пиксели в массив temp
+			//в окне H x W кладу пиксели в массив temp
 			temp1 = getMedial(RGB, width, height, x, y, kSize); //заполняю медиальный массив
 			temp2 = sortRGB(temp1, size, sortFunc); // сортирую каждую из компонент
 			RGBresult[y][x] = temp2[size / 2]; // вытаскиваю срединный элемент
@@ -640,14 +634,6 @@ void TaskMedianFiltering()
 			}
 		}
 	}
-	
-	//Беру алгоритмы
-	//1 реализация - ShellSort.
-	//                          Последовательный вариант с medianFiltering + sortRGB.
-	//                          Параллельный вариант с medianFilteringAsyncSort + sortRGBAsync
-	//2 реализация - QuickSort.
-	//                          Последовательный вариант с medianFiltering + sortRGB.
-	//                          Параллельный вариант с medianFilteringAsyncSort + sortRGBAsync
 }
 
 void main()
