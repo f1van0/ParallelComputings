@@ -374,7 +374,7 @@ void TaskSort()
 					SortIntFuncAverageTime(sortFuncs[i], dataAmount[d], time, 20);
 					if (i == 0 || i == 1 || i == 3 || i == 5)
 						T1[d] = time;
-					resultsFile << time << ";" << T1[d] / time << ";" << T1[d] / (t * time) << ";";
+					resultsFile << time << ";" << T1[d] / time << "^;" << T1[d] / (t * time) << "^;";
 					std::cout << " - Длительность сортировки: " << time << endl;
 				}
 				std::cout << endl;
@@ -572,44 +572,71 @@ void FilteringFuncAverageTime(int filtheringMethod, void* sortFunc, string fileN
 	std::cout << "]\n";
 	avgTime /= iterations;
 	avgTimeT = AvgTrustedInterval(avgTime, Times, iterations);
-	time = avgTimeT * 1000;
+	time = avgTimeT;
 }
 
 void TaskMedianFiltering()
 {
-	void** sortFuncs = new void*[2]{QuickSortConsistently<BYTE>, ShellSortConsistently<BYTE>};
-	string* sortFuncsNames = new string[2]{ "Быстрая сортировка", "Сортировка Шелла" };
-	void** filteringFuncs = new void*[2]{MedianFiltering, medianFilteringParallel};
+	std::ofstream resultsFile;
+
+	void** sortFuncs = new void*[2]{ QuickSortConsistently<BYTE>, ShellSortConsistently<BYTE>};
+	string* sortFuncsNames = new string[2]{ "Быстрая сортировка (параллельная)", "Сортировка Шелла (параллельная)" };
 	string* filteringFuncsNames = new string[2]{"Последовательная медианная фильтрация", "Параллельная медианная фильтрация"};
-	int* kSize = new int[3]{ 9, 15, 21 };
+	string* inputFiles = new string[4]{"500x500.bmp", "640x420.bmp", "840x480.bmp", "1280x720.bmp"};
+	int* kSize = new int[3]{ 3, 9, 12 };
 	int iterations = 20;
 	stringstream ss;
 	double time;
 
-	/*
-	RGBQUAD** sourceImage;
-	RGBQUAD** resultImage;
-	BITMAPFILEHEADER head;
-	BITMAPINFOHEADER info;
-	BMPRead(sourceImage, head, info, "input4.bmp");
-	resultImage = new RGBQUAD*[info.biHeight];
-	for (int i = 0; i < info.biHeight; i++)
-		resultImage[i] = new RGBQUAD[info.biWidth];
-	MedianFiltering(sourceImage, info.biHeight, info.biWidth, kSize[0], resultImage, sortFuncs[0]);
-	BMPWrite(resultImage, head, info, "test.bmp");
-	*/
-
-	for (int j = 0; j < 2; j++)
+	double** T1 = new double*[3];
+	for (int i = 0; i < 3; i++)
 	{
-		cout << "\n\n\n___" << filteringFuncsNames[j] << "___" << endl;
-		for (int i = 0; i < 2; i++)
+		T1[i] = new double[4];
+	}
+	resultsFile.open("Task2Results.csv", std::ios_base::app);
+	resultsFile << "Функция;Потоки;Ksize;НД1;;НД2;;НД3;;НД4\n";
+	resultsFile << ";;;Время;Sp(n);Время;Sp(n);Время;Sp(n);Время;Sp(n);\n";
+
+	for (int i = 0; i < 2; i++)
+	{
+		std::cout << sortFuncsNames[i] << endl;
+		for (int j = 0; j < 2; j++)
 		{
-			for (int d = 0; d < 3; d++)
+			resultsFile << sortFuncsNames[i] << " [" << filteringFuncsNames[j] << "];";
+			cout << "___" << filteringFuncsNames[j] << "___" << endl;
+			for (int t = 2; t < 5; t++)
 			{
-				ss = stringstream();
-				ss << "ouput_" << sortFuncsNames[i] << "_k" << kSize[d] << ".bmp";
-				FilteringFuncAverageTime(j, sortFuncs[i], "input4.bmp", ss.str(), kSize[d], time, 20);
-				std::cout << ss.str() << ". " << time << " с." << endl;
+				if (j == 0)
+					t = 1;
+
+				if (t > 2)
+					resultsFile << ";";
+
+				resultsFile << t << ";";
+				std::cout << "Потоков: " << t << endl;
+				for (int k = 0; k < 3; k++)
+				{
+					if (k != 0)
+						resultsFile << ";;";
+
+					resultsFile << kSize[k] << ";";
+					std::cout << "Ksize = " << kSize[k] << endl;
+					for (int d = 0; d < 4; d++)
+					{
+						ss = stringstream();
+						ss << inputFiles[d] << "_ouput_" << sortFuncsNames[i] << "_k" << kSize[k] << ".bmp";
+						std::cout << "Input file: " << inputFiles[d] << endl;
+						FilteringFuncAverageTime(j, sortFuncs[i], inputFiles[d], ss.str(), kSize[k], time, 20);
+						if (j == 0)
+							T1[k][d] = time;
+						std::cout << ". Длительность: " << time << " с." << endl;
+						resultsFile << time << "^;" << (double)T1[k][d] / time << "^;";
+					}
+					resultsFile << endl;
+				}
+
+				if (j == 0)
+					break;
 			}
 		}
 	}
