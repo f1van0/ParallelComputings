@@ -447,14 +447,15 @@ RGBQUAD* sortRGBAsync(RGBQUAD* arr, long length, void* sortFunc)
 	BYTE *red = new BYTE[length];
 	BYTE *green = new BYTE[length];
 	BYTE *blue = new BYTE[length];
-#pragma omp parallel for shared(arr, red, blue, green)
+#pragma omp parallel for
 	for (int i = 0; i < length; i++)
 	{
 		red[i] = arr[i].rgbRed;
 		green[i] = arr[i].rgbGreen;
 		blue[i] = arr[i].rgbBlue;
 	}
-#pragma omp parallel sections shared(red, blue, green, length)
+
+#pragma omp parallel sections
 	{
 #pragma omp section
 		{
@@ -500,10 +501,11 @@ void MedianFiltering(RGBQUAD** &RGB, int height, int width, int kSize, RGBQUAD**
 //медианная фильтрация (параллельная)
 void medianFilteringParallel(RGBQUAD** &RGB, int height, int width, int kSize, RGBQUAD** &RGBresult, void* sortFunc)
 {
-	RGBQUAD *temp1, *temp2;
 	int size = (2 * kSize + 1) * (2 * kSize + 1);
+#pragma omp parallel for
 	for (int y = 0; y < height; y++)
 	{
+		RGBQUAD *temp1, *temp2;
 		for (int x = 0; x < width; x++)
 		{
 			//в окне H x W ложу пиксели в массив temp
@@ -603,6 +605,8 @@ void TaskMedianFiltering()
 				if (j == 0)
 					t = 1;
 
+				omp_set_num_threads(t);
+
 				if (t > 2)
 					resultsFile << ";";
 
@@ -618,7 +622,7 @@ void TaskMedianFiltering()
 					for (int d = 0; d < 4; d++)
 					{
 						ss = stringstream();
-						ss << inputFiles[d] << "_ouput_" << sortFuncsNames[i] << "_k" << kSize[k] << ".bmp";
+						ss << inputFiles[d] << "_ouput_" << filteringFuncsNames[j] << "__" << sortFuncsNames[i] << "_k" << kSize[k] << ".bmp";
 						std::cout << "Input file: " << inputFiles[d] << endl;
 						FilteringFuncAverageTime(j, sortFuncs[i], inputFiles[d], ss.str(), kSize[k], time, 20);
 						if (j == 0)
