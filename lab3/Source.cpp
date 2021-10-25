@@ -576,7 +576,7 @@ void TaskMedianFiltering()
 	std::ofstream resultsFile;
 
 	void** sortFuncs = new void*[2]{ QuickSortConsistently<BYTE>, ShellSortConsistently<BYTE>};
-	string* sortFuncsNames = new string[2]{ "Быстрая сортировка (параллельная)", "Сортировка Шелла (параллельная)" };
+	string* sortFuncsNames = new string[2]{ "Быстрая сортировка (последовательная)", "Сортировка Шелла (последовательная)" };
 	string* filteringFuncsNames = new string[2]{"Последовательная медианная фильтрация", "Параллельная медианная фильтрация"};
 	string* inputFiles = new string[4]{"500x500.bmp", "640x420.bmp", "840x480.bmp", "1280x720.bmp"};
 	int* kSize = new int[3]{ 3, 9, 12 };
@@ -593,10 +593,10 @@ void TaskMedianFiltering()
 	resultsFile << "Функция;Потоки;Ksize;НД1;;НД2;;НД3;;НД4\n";
 	resultsFile << ";;;Время;Sp(n);Время;Sp(n);Время;Sp(n);Время;Sp(n);\n";
 
-	for (int i = 0; i < 2; i++)
+	for (int i = 1; i < 2; i++)
 	{
 		std::cout << sortFuncsNames[i] << endl;
-		for (int j = 0; j < 2; j++)
+		for (int j = 1; j < 2; j++)
 		{
 			resultsFile << sortFuncsNames[i] << " [" << filteringFuncsNames[j] << "];";
 			cout << "___" << filteringFuncsNames[j] << "___" << endl;
