@@ -266,7 +266,7 @@ double AvgTrustedInterval(double& avg, double*& times, int& cnt)
 	return newAVg / newCnt;
 }
 
-void SortIntFuncAverageTime(void* func, int dataAmount, double& time, int iterations)
+void SortIntFuncAverageTime(IntSortFunc func, int dataAmount, double& time, int iterations)
 {
 	int* arr = new int[dataAmount];
 	GetValues(arr, dataAmount);
@@ -279,7 +279,7 @@ void SortIntFuncAverageTime(void* func, int dataAmount, double& time, int iterat
 	{
 		GetValues(arr, dataAmount);
 		startTime = omp_get_wtime();
-		(*(IntSortFunc)func)(arr, dataAmount);
+		func(arr, dataAmount);
 		curTime = omp_get_wtime() - startTime;
 		Times[i] = curTime;
 		avgTime += curTime;
@@ -292,7 +292,7 @@ void SortIntFuncAverageTime(void* func, int dataAmount, double& time, int iterat
 	delete[] arr;
 }
 
-void SortDoubleFuncAverageTime(void* func, int dataAmount, double& time, int iterations)
+void SortDoubleFuncAverageTime(DoubleSortFunc func, int dataAmount, double& time, int iterations)
 {
 	double* arr = new double[dataAmount];
 	GetValues(arr, dataAmount);
@@ -304,7 +304,7 @@ void SortDoubleFuncAverageTime(void* func, int dataAmount, double& time, int ite
 	for (int i = 0; i < iterations; i++)
 	{
 		startTime = omp_get_wtime();
-		(*(DoubleSortFunc)func)(arr, dataAmount);
+		func(arr, dataAmount);
 		curTime = omp_get_wtime() - startTime;
 		Times[i] = curTime;
 		avgTime += curTime;
@@ -317,7 +317,6 @@ void SortDoubleFuncAverageTime(void* func, int dataAmount, double& time, int ite
 	delete[] arr;
 }
 
-template<class T>
 void TaskSort()
 {
 	std::ofstream resultsFile;
@@ -325,8 +324,8 @@ void TaskSort()
 
 	double time;
 	string* funcsNames = new string[7]{ "Классический алгоритм пузырька", "Чет-нечетной перестановки (последовательный)", "Чет-нечет перестановки (параллельный с for)", "Алгоритм Шелла (последовательный)", "Алгоритм Шелла (параллельный с for)", "Алгоритм быстрой сортировки (последовательный)", "Алгоритм быстрой сортировки (параллельный с sections)" };
-	void** sortFuncs = new void*[7]{ BubbleSortConsistently<T>, BubbleEvenSortConsistently<T>, BubbleEvenSortParallelFor<T>, ShellSortConsistently<T>, ShellSortParallelFor<T>, QuickSortConsistently<T>, QuickSortParallelSections<T> };
-
+	IntSortFunc* sortFuncs = new IntSortFunc[7]{ BubbleSortConsistently<int>, BubbleEvenSortConsistently<int>, BubbleEvenSortParallelFor<int>, ShellSortConsistently<int>, ShellSortParallelFor<int>, QuickSortConsistently<int>, QuickSortParallelSections<int> };
+	DoubleSortFunc* sortFuncsDouble = new DoubleSortFunc[7]{ BubbleSortConsistently<double>, BubbleEvenSortConsistently<double>, BubbleEvenSortParallelFor<double>, ShellSortConsistently<double>, ShellSortParallelFor<double>, QuickSortConsistently<double>, QuickSortParallelSections<double> };
 	double* T1 = new double[3];
 	resultsFile.open("Task1Results.csv", std::ios_base::app);
 	resultsFile << "Функция сортировки;Потоки;Время;Sp(n);Ep(n);Время;Sp(n);Ep(n);Время;Sp(n);Ep(n);\n";
@@ -344,7 +343,7 @@ void TaskSort()
 			std::cout << "Сортировка массивов с типом данных Double" << endl;
 		}
 		
-		for (int cr = 0; cr < 3; cr++)
+		for (int cr = 0; cr < 4; cr++)
 			resultsFile << "НД" << cr + 1 << ": " << dataAmount[cr] << ";;;";
 
 		resultsFile << endl;
@@ -360,12 +359,17 @@ void TaskSort()
 					
 				std::cout << "Потоков: " << t << endl;
 				resultsFile << ";" << t << ";";
+				omp_set_num_threads(t);
 
-				for (int d = 0; d < 4; d++)
+				for (int d = 0; d < 4; d++) //4
 				{
 					std::cout << "Количество элементов: " << dataAmount[d] << endl;
-					omp_set_num_threads(t);
-					SortIntFuncAverageTime(sortFuncs[i], dataAmount[d], time, 20);
+
+					if (j == 0)
+						SortIntFuncAverageTime(sortFuncs[i], dataAmount[d], time, 20);
+					else
+						SortDoubleFuncAverageTime(sortFuncsDouble[i], dataAmount[d], time, 20);
+
 					if (i == 0 || i == 1 || i == 3 || i == 5)
 						T1[d] = time;
 					resultsFile << time << ";" << T1[d] / time << "^;" << T1[d] / (t * time) << "^;";
@@ -419,9 +423,7 @@ RGBQUAD* sortRGB(RGBQUAD* arr, long length, void* sortFunc)
 	BYTE *red = new BYTE[length];
 	BYTE *green = new BYTE[length];
 	BYTE *blue = new BYTE[length];
-	//BYTE *red1;
-	//BYTE *green1;
-	//BYTE *blue1;
+
 	for (int i = 0; i < length; i++)
 	{
 		red[i] = arr[i].rgbRed;
@@ -651,7 +653,7 @@ void main()
 	cin >> choice;
 	if (choice == 1)
 	{
-		TaskSort<int>();
+		TaskSort();
 	}
 	else
 	{

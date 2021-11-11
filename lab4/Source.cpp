@@ -381,8 +381,8 @@ void TaskFilteringMethods()
 				if (k != 0)
 					resultsFile << ";;";
 
-				resultsFile << kSize[k] << ";";
-				std::cout << "Ksize = " << kSize[k] << endl;
+				resultsFile << kSize[k] * 2 + 1 << ";";
+				std::cout << "Ksize = " << kSize[k] * 2 + 1 << endl;
 				for (int d = 0; d < 4; d++)
 				{
 					ss = stringstream();
@@ -408,16 +408,5 @@ void main()
 	srand(time(0));
 	setlocale(LC_ALL, "Russian");
 	int choice;
-
-	std::cout << "[1]: Задание 1\n"
-		<< "[2]: Задание 2\n";
-	cin >> choice;
-	if (choice == 1)
-	{
-		
-	}
-	else
-	{
-		TaskFilteringMethods();
-	}
+	TaskFilteringMethods();
 }
