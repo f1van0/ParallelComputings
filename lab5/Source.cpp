@@ -1,4 +1,4 @@
-п»ї#include<tbb/tbb.h>
+#include<tbb/tbb.h>
 #include <omp.h>
 #include <stdio.h>
 #include <iostream>
@@ -22,7 +22,7 @@ typedef void(*IntMatrix)(int**&, int**&, int**&, int);
 typedef void(*DoubleMatrix)(double**&, double**&, double**&, int);
 typedef void(*TextureFilterMethod)(RGBQUAD **&image, int height, int width, int rh, int rw, float **&M, float **&U, float **&R, float **&E);
 
-//РћР±РјРµРЅ Р·РЅР°С‡РµРЅРёСЏРјРё
+//Обмен значениями
 template<class T>
 void Swap(T& one, T& two)
 {
@@ -31,7 +31,7 @@ void Swap(T& one, T& two)
 	two = temp;
 }
 
-// РљР»Р°СЃСЃ РґР»СЏ reduce РґР»СЏ РїРѕРґСЃС‡РµС‚Р° СЃСѓРјРјС‹ СЌР»РµРјРµРЅС‚РѕРІ РІ 2 РјР°С‚СЂРёС†Р°С…
+// Класс для reduce для подсчета суммы элементов в 2 матрицах
 template<class T>
 class reduce_total {
 	T* m1;
@@ -59,10 +59,10 @@ public:
 	reduce_total(reduce_total& r, split) : m1(r.m1), m2(r.m2), size(r.size), sumRes1(0.0), sumRes2(0.0) {} // Split
 	void join(const reduce_total& r) { sumRes1 += r.sumRes1; sumRes2 += r.sumRes2; } // Join
 
-	reduce_total(T* orig_m1, T* orig_m2, int orig_size) : m1(orig_m1), m2(orig_m2), size(orig_size), sumRes1(0.0), sumRes2(0.0) {} // РћСЃРЅРѕРІРЅРѕР№ РєРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ
+	reduce_total(T* orig_m1, T* orig_m2, int orig_size) : m1(orig_m1), m2(orig_m2), size(orig_size), sumRes1(0.0), sumRes2(0.0) {} // Основной конструктор
 };
 
-//РљР»Р°СЃСЃ РґР»СЏ reduce РґР»СЏ РЅР°С…РѕР¶РґРµРЅРёСЏ РјР°РєСЃРёРјР°Р»СЊРЅРѕРіРѕ Р·РЅР°С‡РµРЅРёСЏ РІ 2 РјР°С‚СЂРёС†Р°С…
+//Класс для reduce для нахождения максимального значения в 2 матрицах
 template<class T>
 class reduce_max {
 private:
@@ -97,7 +97,7 @@ public:
 
 #pragma region SumMatrix
 
-//Р¤СѓРЅРєС†РёСЏ СЃСѓРјРјРёСЂСѓРµС‚ РјР°С‚СЂРёС†С‹
+//Функция суммирует матрицы
 template<class T>
 void SumMatrix(T**& matrix1, T**& matrix2, T**& result, int size)
 {
@@ -113,7 +113,7 @@ void SumMatrix(T**& matrix1, T**& matrix2, T**& result, int size)
 	//return time_stop - time_start;
 }
 
-//Р¤СѓРЅРєС†РёСЏ СЃСѓРјРјРёСЂСѓРµС‚ РјР°С‚СЂРёС†С‹ СЃ OMP
+//Функция суммирует матрицы с OMP
 template<class T>
 void SumMatrixOMP(T**& matrix1, T**& matrix2, T**& result, int size)
 {
@@ -130,7 +130,7 @@ void SumMatrixOMP(T**& matrix1, T**& matrix2, T**& result, int size)
 	//return time_stop - time_start;
 }
 
-//Р¤СѓРЅРєС†РёСЏ СЃСѓРјРјРёСЂСѓРµС‚ РјР°С‚СЂРёС†С‹ СЃ TBB
+//Функция суммирует матрицы с TBB
 template<class T>
 void SumMatrixTBB(T**& matrix1, T**& matrix2, T**& result, int size)
 {
@@ -154,7 +154,7 @@ void SumMatrixTBB(T**& matrix1, T**& matrix2, T**& result, int size)
 
 #pragma region ProductMatrix
 
-//Р¤СѓРЅРєС†РёСЏ РІС‹С‡РёСЃР»СЏРµС‚ РїСЂРѕРёР·РІРµРґРµРЅРёРµ РјР°С‚СЂРёС†
+//Функция вычисляет произведение матриц
 template<class T>
 void ProductMatrix(T**& matrix1, T**& matrix2, T**& result, int size)
 {
@@ -171,7 +171,7 @@ void ProductMatrix(T**& matrix1, T**& matrix2, T**& result, int size)
 	//return time_stop - time_start;
 }
 
-//Р¤СѓРЅРєС†РёСЏ РІС‹С‡РёСЃР»СЏРµС‚ РїСЂРѕРёР·РІРµРґРµРЅРёРµ РјР°С‚СЂРёС† СЃ OMP
+//Функция вычисляет произведение матриц с OMP
 template<class T>
 void ProductMatrixOMP(T**& matrix1, T**& matrix2, T**& result, int size)
 {
@@ -189,7 +189,7 @@ void ProductMatrixOMP(T**& matrix1, T**& matrix2, T**& result, int size)
 	//return time_stop - time_start;
 }
 
-//Р¤СѓРЅРєС†РёСЏ РІС‹С‡РёСЃР»СЏРµС‚ РїСЂРѕРёР·РІРµРґРµРЅРёРµ РјР°С‚СЂРёС† СЃ TBB
+//Функция вычисляет произведение матриц с TBB
 template<class T>
 void ProductMatrixTBB(T**& matrix1, T**& matrix2, T**& result, int size)
 {
@@ -213,7 +213,7 @@ void ProductMatrixTBB(T**& matrix1, T**& matrix2, T**& result, int size)
 
 #pragma region TotalSumMatrix
 
-//Р¤СѓРЅРєС†РёСЏ СЃСѓРјРјРёСЂСѓРµС‚ СЌР»РµРјРµРЅС‚С‹ РјР°С‚СЂРёС†
+//Функция суммирует элементы матриц
 template<class T>
 void TotalSum(T**& matrix1, T**& matrix2, T**& unused, int size) {
 
@@ -234,7 +234,7 @@ void TotalSum(T**& matrix1, T**& matrix2, T**& unused, int size) {
 	//return time_stop - time_start;
 }
 
-//Р¤СѓРЅРєС†РёСЏ СЃСѓРјРјРёСЂСѓРµС‚ СЌР»РµРјРµРЅС‚С‹ РјР°С‚СЂРёС† СЃ OMP reduction
+//Функция суммирует элементы матриц с OMP reduction
 template<class T>
 void TotalSumOMP(T**& matrix1, T**& matrix2, T**& unused, int size) {
 
@@ -264,7 +264,7 @@ void TotalSumOMP(T**& matrix1, T**& matrix2, T**& unused, int size) {
 	//return time_stop - time_start;
 }
 
-//Р¤СѓРЅРєС†РёСЏ СЃСѓРјРјРёСЂСѓРµС‚ СЌР»РµРјРµРЅС‚С‹ РјР°С‚СЂРёС† СЃ TBB
+//Функция суммирует элементы матриц с TBB
 template<class T>
 void TotalSumTBB(T**& matrix1, T**& matrix2, T**& unused, int size) {
 
@@ -288,7 +288,7 @@ void TotalSumTBB(T**& matrix1, T**& matrix2, T**& unused, int size) {
 
 #pragma region MaxElemMatrix
 
-//Р¤СѓРЅРєС†РёСЏ РЅР°С…РѕРґРёС‚ РјР°РєСЃРёРјР°Р»СЊРЅС‹Р№ СЌР»РµРјРµРЅС‚ РІ 2 РјР°С‚СЂРёС†Р°С… СЃ OMP for
+//Функция находит максимальный элемент в 2 матрицах с OMP for
 template<class T>
 void MaxElem(T**& matrix1, T**& matrix2, T**& unused, int size) {
 
@@ -308,7 +308,7 @@ void MaxElem(T**& matrix1, T**& matrix2, T**& unused, int size) {
 	//return time_stop - time_start;
 }
 
-//Р¤СѓРЅРєС†РёСЏ РЅР°С…РѕРґРёС‚ РјР°РєСЃРёРјР°Р»СЊРЅС‹Р№ СЌР»РµРјРµРЅС‚ РІ 2 РјР°С‚СЂРёС†Р°С… СЃ OMP for
+//Функция находит максимальный элемент в 2 матрицах с OMP for
 template<class T>
 void MaxElemOMP(T**& matrix1, T**& matrix2, T**& unused, int size) {
 
@@ -330,7 +330,7 @@ void MaxElemOMP(T**& matrix1, T**& matrix2, T**& unused, int size) {
 	//return time_stop - time_start;
 }
 
-//Р¤СѓРЅРєС†РёСЏ РЅР°С…РѕРґРёС‚ РјР°РєСЃРёРјР°Р»СЊРЅС‹Р№ СЌР»РµРјРµРЅС‚ РІ 2 РјР°С‚СЂРёС†Р°С… СЃ TBB
+//Функция находит максимальный элемент в 2 матрицах с TBB
 template<class T>
 void MaxElemTBB(T**& matrix1, T**& matrix2, T**& unused, int size) {
 
@@ -352,7 +352,7 @@ void MaxElemTBB(T**& matrix1, T**& matrix2, T**& unused, int size) {
 #pragma endregion
 
 #pragma region specFunc
-//Р—Р°РїРѕР»РЅРµРЅРёРµ РјР°С‚СЂРёС†С‹
+//Заполнение матрицы
 template<class T>
 void Fill2DMatrix(T** matrix, int size)
 {
@@ -367,7 +367,7 @@ void Fill2DMatrix(T** matrix, int size)
 	});
 }
 
-//Р’С‹РІРµСЃС‚Рё РјР°С‚СЂРёС†С‹
+//Вывести матрицы
 template<class T>
 void Print2DMatrix(T** matrix, int size)
 {
@@ -506,21 +506,21 @@ void CalcMatrixFuncs()
 	int* dataAmount = new int[4]{ 3000, 4500, 6000, 8000 };
 
 	double time;
-	string* funcsNames = new string[12]{ "РЎСѓРјРјРёСЂРѕРІР°РЅРёРµ РјР°С‚СЂРёС† (РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕ)", "РЎСѓРјРјРёСЂРѕРІР°РЅРёРµ РјР°С‚СЂРёС† (Open MP)", "РЎСѓРјРјРёСЂРѕРІР°РЅРёРµ РјР°С‚СЂРёС† (TBB)", "РџРµСЂРµРјРЅРѕР¶РµРЅРёРµ РјР°С‚СЂРёС† (РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕ)", "РџРµСЂРµРјРЅРѕР¶РµРЅРёРµ РјР°С‚СЂРёС† (Open MP)", "РџРµСЂРµРјРЅРѕР¶РµРЅРёРµ РјР°С‚СЂРёС† (TBB)", "Р’С‹С‡РёСЃР»РµРЅРёРµ СЃСѓРјРјС‹ СЌР»РµРјРµРЅС‚РѕРІ 2 РјР°С‚СЂРёС† (РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕ)", "Р’С‹С‡РёСЃР»РµРЅРёРµ СЃСѓРјРјС‹ СЌР»РµРјРµРЅС‚РѕРІ 2 РјР°С‚СЂРёС† (Open MP)", "Р’С‹С‡РёСЃР»РµРЅРёРµ СЃСѓРјРјС‹ СЌР»РµРјРµРЅС‚РѕРІ 2 РјР°С‚СЂРёС† (TBB)", "РџРѕРёСЃРє РјР°РєСЃРёРјР°Р»СЊРЅРѕРіРѕ СЌР»РµРјРµРЅС‚Р° РІ 2 РјР°С‚СЂРёС†Р°С… (РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕ)", "РџРѕРёСЃРє РјР°РєСЃРёРјР°Р»СЊРЅРѕРіРѕ СЌР»РµРјРµРЅС‚Р° РІ 2 РјР°С‚СЂРёС†Р°С… (Open MP)", "РџРѕРёСЃРє РјР°РєСЃРёРјР°Р»СЊРЅРѕРіРѕ СЌР»РµРјРµРЅС‚Р° РІ 2 РјР°С‚СЂРёС†Р°С… (TBB)" };
+	string* funcsNames = new string[12]{ "Суммирование матриц (последовательно)", "Суммирование матриц (Open MP)", "Суммирование матриц (TBB)", "Перемножение матриц (последовательно)", "Перемножение матриц (Open MP)", "Перемножение матриц (TBB)", "Вычисление суммы элементов 2 матриц (последовательно)", "Вычисление суммы элементов 2 матриц (Open MP)", "Вычисление суммы элементов 2 матриц (TBB)", "Поиск максимального элемента в 2 матрицах (последовательно)", "Поиск максимального элемента в 2 матрицах (Open MP)", "Поиск максимального элемента в 2 матрицах (TBB)" };
 	//IntMatrix* funcInt = new IntMatrix[3]{ SumMatrix<int>, SumMatrixOMP<int>, SumMatrixTBB<int> };
 	DoubleMatrix* funcDouble = new DoubleMatrix[12]{ SumMatrix<double>, SumMatrixOMP<double>, SumMatrixTBB<double>, ProductMatrix<double>, ProductMatrixOMP<double>, ProductMatrixTBB<double>, TotalSum<double>, TotalSumOMP<double>, TotalSumTBB<double>, MaxElem<double>, MaxElemOMP<double>, MaxElemTBB<double> };
 	IntMatrix* funcInt = new IntMatrix[12]{ SumMatrix<int>, SumMatrixOMP<int>, SumMatrixTBB<int>, ProductMatrix<int>, ProductMatrixOMP<int>, ProductMatrixTBB<int>, TotalSum<int>, TotalSumOMP<int>, TotalSumTBB<int>, MaxElem<int>, MaxElemOMP<int>, MaxElemTBB<int> };
-	double* T1 = new double[3];
+	double T1[3][2];
 	resultsFile.open("Task1Results.csv", std::ios_base::app);
 	resultsFile << "Int;;;;;;;;;;Double;\n";
-	resultsFile << "Р¤СѓРЅРєС†РёСЏ СЃРѕСЂС‚РёСЂРѕРІРєРё;РџРѕС‚РѕРєРё;Р’СЂРµРјСЏ;Sp(n);Р’СЂРµРјСЏ;Sp(n);Р’СЂРµРјСЏ;Sp(n);Р’СЂРµРјСЏ;Sp(n);Р’СЂРµРјСЏ;Sp(n);Р’СЂРµРјСЏ;Sp(n);Р’СЂРµРјСЏ;Sp(n);Р’СЂРµРјСЏ;Sp(n);\n";
+	resultsFile << "Функция сортировки;Потоки;Время;Sp(n);Время;Sp(n);Время;Sp(n);Время;Sp(n);Время;Sp(n);Время;Sp(n);Время;Sp(n);Время;Sp(n);\n";
 
 	resultsFile << ";;";
 	for (int cr = 0; cr < 4; cr++)
-		resultsFile << "РќР”" << cr + 1 << ": " << dataAmount[cr] << ";;";
+		resultsFile << "НД" << cr + 1 << ": " << dataAmount[cr] << ";;";
 
 	for (int cr = 0; cr < 4; cr++)
-		resultsFile << "РќР”" << cr + 1 << ": " << dataAmount[cr] << ";;";
+		resultsFile << "НД" << cr + 1 << ": " << dataAmount[cr] << ";;";
 
 	resultsFile << endl;
 
@@ -533,7 +533,7 @@ void CalcMatrixFuncs()
 			if (i == 0 || i == 3 || i == 6 || i == 9)
 				t = 1;
 
-			std::cout << "РџРѕС‚РѕРєРѕРІ: " << t << endl;
+			std::cout << "Потоков: " << t << endl;
 			resultsFile << ";" << t << ";";
 			omp_set_num_threads(t);
 			global_control global_limit(global_control::max_allowed_parallelism, t);
@@ -542,26 +542,26 @@ void CalcMatrixFuncs()
 			{
 				if (j == 0)
 				{
-					cout << "РўРёРї РґР°РЅРЅС‹С… Int";
+					cout << "Тип данных Int";
 				}
 				else
 				{
-					cout << "РўРёРї РґР°РЅРЅС‹С… Double";
+					cout << "Тип данных Double";
 				}
 
-				for (int d = 0; d < 4; d++) //4
+				for (int d = 0; d < 4; d++)
 				{
-					std::cout << "РљРѕР»РёС‡РµСЃС‚РІРѕ СЌР»РµРјРµРЅС‚РѕРІ: " << dataAmount[d] << endl;
+					std::cout << "Количество элементов: " << dataAmount[d] << endl;
 
 					if (j == 0)
-						CalcMatrixAvgTimeInt(funcInt[i], dataAmount[d], time, 20);
+						CalcMatrixAvgTimeInt(funcInt[i], dataAmount[d], time, 50);
 					else
-						CalcMatrixAvgTimeDouble(funcDouble[i], dataAmount[d], time, 20);
+						CalcMatrixAvgTimeDouble(funcDouble[i], dataAmount[d], time, 50);
 
 					if (i == 0 || i == 3 || i == 6 || i == 9)
-						T1[d] = time;
-					resultsFile << time << ";" << T1[d] / time << ";";
-					std::cout << " - Р”Р»РёС‚РµР»СЊРЅРѕСЃС‚СЊ: " << time << endl;
+						T1[d][j] = time;
+					resultsFile << time << ";" << T1[d][j] / time << ";";
+					std::cout << " - Длительность: " << time << endl;
 				}
 			}
 			
@@ -578,7 +578,7 @@ void CalcMatrixFuncs()
 #pragma endregion
 
 #pragma region MedianFiltering
-//РЎРѕСЂС‚РёСЂРѕРІРєР° РЁРµР»Р»Р°
+//Сортировка Шелла
 template<class T>
 void ShellSortConsistently(T *arr, int length)
 {
@@ -586,10 +586,10 @@ void ShellSortConsistently(T *arr, int length)
 
 	for (step = length / 2; step > 0; step /= 2)
 	{
-		// РџРµСЂРµС‡РёСЃР»РµРЅРёРµ СЌР»РµРјРµРЅС‚РѕРІ, РєРѕС‚РѕСЂС‹Рµ СЃРѕСЂС‚РёСЂСѓСЋС‚СЃСЏ РЅР° РѕРїСЂРµРґРµР»С‘РЅРЅРѕРј С€Р°РіРµ
+		// Перечисление элементов, которые сортируются на определённом шаге
 		for (i = step; i < length; i++)
 		{
-			// РџРµСЂРµСЃС‚Р°РЅРѕРІРєР° СЌР»РµРјРµРЅС‚РѕРІ РІРЅСѓС‚СЂРё РїРѕРґСЃРїРёСЃРєР°, РїРѕРєР° i-С‚С‹Р№ РЅРµ Р±СѓРґРµС‚ РѕС‚СЃРѕСЂС‚РёСЂРѕРІР°РЅ
+			// Перестановка элементов внутри подсписка, пока i-тый не будет отсортирован
 			for (j = i - step; j >= 0 && arr[j] > arr[j + step]; j -= step)
 			{
 				Swap(arr[j], arr[j + step]);
@@ -598,7 +598,7 @@ void ShellSortConsistently(T *arr, int length)
 	}
 }
 
-//Р·Р°РїРѕР»РЅРµРЅРёРµ РјРµРґРёР°Р»СЊРЅРѕРіРѕ РјР°СЃСЃРёРІР°
+//заполнение медиального массива
 RGBQUAD* getMedial(RGBQUAD **&image, int width, int height, int x, int y, int kSize)
 {
 	int index = 0;
@@ -629,7 +629,7 @@ RGBQUAD* getMedial(RGBQUAD **&image, int width, int height, int x, int y, int kS
 	return barray;
 }
 
-//РЎРѕСЂС‚РёСЂРѕРІРєР° РјР°СЃСЃРёРІР° Р Р“Р‘
+//Сортировка массива РГБ
 RGBQUAD* sortRGB(RGBQUAD* arr, long length)
 {
 	BYTE *red = new BYTE[length];
@@ -655,7 +655,7 @@ RGBQUAD* sortRGB(RGBQUAD* arr, long length)
 	return resultRGBArr;
 }
 
-//СЃРѕСЂС‚РёСЂРѕРІРєР° РјР°СЃСЃРёРІР° Р Р“Р‘ СЃ Omp sections Рё for
+//сортировка массива РГБ с Omp sections и for
 RGBQUAD* sortRGB_OMP(RGBQUAD* arr, long length)
 {
 	BYTE *red = new BYTE[length];
@@ -693,7 +693,7 @@ RGBQUAD* sortRGB_OMP(RGBQUAD* arr, long length)
 	return narr;
 }
 
-//СЃРѕСЂС‚РёСЂРѕРІРєР° РјР°СЃСЃРёРІР° Р Р“Р‘ СЃ Omp sections Рё for
+//сортировка массива РГБ с Omp sections и for
 RGBQUAD* sortRGB_TBB(RGBQUAD* arr, long length)
 {
 	BYTE *red = new BYTE[length];
@@ -726,7 +726,7 @@ RGBQUAD* sortRGB_TBB(RGBQUAD* arr, long length)
 	return narr;
 }
 
-//РјРµРґРёР°РЅРЅР°СЏ С„РёР»СЊС‚СЂР°С†РёСЏ
+//медианная фильтрация
 void MedianFiltering(RGBQUAD** &RGB, int height, int width, int kSize, RGBQUAD** &RGBresult)
 {
 	RGBQUAD *temp1, *temp2;
@@ -735,17 +735,17 @@ void MedianFiltering(RGBQUAD** &RGB, int height, int width, int kSize, RGBQUAD**
 	{
 		for (int x = 0; x < width; x++)
 		{
-			//РІ РѕРєРЅРµ H x W РєР»Р°РґСѓ РїРёРєСЃРµР»Рё РІ РјР°СЃСЃРёРІ temp
-			temp1 = getMedial(RGB, width, height, x, y, kSize); //Р·Р°РїРѕР»РЅСЏСЋ РјРµРґРёР°Р»СЊРЅС‹Р№ РјР°СЃСЃРёРІ
-			temp2 = sortRGB(temp1, size); // СЃРѕСЂС‚РёСЂСѓСЋ РєР°Р¶РґСѓСЋ РёР· РєРѕРјРїРѕРЅРµРЅС‚
-			RGBresult[y][x] = temp2[size / 2]; // РІС‹С‚Р°СЃРєРёРІР°СЋ СЃСЂРµРґРёРЅРЅС‹Р№ СЌР»РµРјРµРЅС‚
+			//в окне H x W кладу пиксели в массив temp
+			temp1 = getMedial(RGB, width, height, x, y, kSize); //заполняю медиальный массив
+			temp2 = sortRGB(temp1, size); // сортирую каждую из компонент
+			RGBresult[y][x] = temp2[size / 2]; // вытаскиваю срединный элемент
 			delete[] temp1;
 			delete[] temp2;
 		}
 	}
 }
 
-//РјРµРґРёР°РЅРЅР°СЏ С„РёР»СЊС‚СЂР°С†РёСЏ (OMP)
+//медианная фильтрация (OMP)
 void MedianFilteringOMP(RGBQUAD** &RGB, int height, int width, int kSize, RGBQUAD** &RGBresult)
 {
 	int size = (2 * kSize + 1) * (2 * kSize + 1);
@@ -755,32 +755,32 @@ void MedianFilteringOMP(RGBQUAD** &RGB, int height, int width, int kSize, RGBQUA
 		RGBQUAD *temp1, *temp2;
 		for (int x = 0; x < width; x++)
 		{
-			//РІ РѕРєРЅРµ H x W Р»РѕР¶Сѓ РїРёРєСЃРµР»Рё РІ РјР°СЃСЃРёРІ temp
-			temp1 = getMedial(RGB, width, height, x, y, kSize); //Р·Р°РїРѕР»РЅСЏСЋ РјРµРґРёР°Р»СЊРЅС‹Р№ РјР°СЃСЃРёРІ
+			//в окне H x W ложу пиксели в массив temp
+			temp1 = getMedial(RGB, width, height, x, y, kSize); //заполняю медиальный массив
 			temp2 = sortRGB_OMP(temp1, size);
-			RGBresult[y][x] = temp2[size / 2]; // РІС‹С‚Р°СЃРєРёРІР°СЋ СЃСЂРµРґРёРЅРЅС‹Р№ СЌР»РµРјРµРЅС‚
+			RGBresult[y][x] = temp2[size / 2]; // вытаскиваю срединный элемент
 			delete[] temp1;
 			delete[] temp2;
 		}
 	}
 }
 
-//РјРµРґРёР°РЅРЅР°СЏ С„РёР»СЊС‚СЂР°С†РёСЏ (TBB)
+//медианная фильтрация (TBB)
 void MedianFilteringTBB(RGBQUAD** &RGB, int height, int width, int kSize, RGBQUAD** &RGBresult)
 {
 	int size = (2 * kSize + 1) * (2 * kSize + 1);
 	
-	tbb::parallel_for(tbb::blocked_range2d<int>(0, width, 0, height), [&](tbb::blocked_range2d<int> r)
+	tbb::parallel_for(tbb::blocked_range2d<int>(0, height, 0, width), [&](tbb::blocked_range2d<int> r)
 		{
 			for (int y = r.rows().begin(); y < r.rows().end(); y++)
 			{
 				RGBQUAD *temp1, *temp2;
 				for (int x = r.cols().begin(); x < r.cols().end(); x++)
 				{
-					//РІ РѕРєРЅРµ H x W Р»РѕР¶Сѓ РїРёРєСЃРµР»Рё РІ РјР°СЃСЃРёРІ temp
-					temp1 = getMedial(RGB, width, height, x, y, kSize); //Р·Р°РїРѕР»РЅСЏСЋ РјРµРґРёР°Р»СЊРЅС‹Р№ РјР°СЃСЃРёРІ
+					//в окне H x W ложу пиксели в массив temp
+					temp1 = getMedial(RGB, width, height, x, y, kSize); //заполняю медиальный массив
 					temp2 = sortRGB_TBB(temp1, size);
-					RGBresult[y][x] = temp2[size / 2]; // РІС‹С‚Р°СЃРєРёРІР°СЋ СЃСЂРµРґРёРЅРЅС‹Р№ СЌР»РµРјРµРЅС‚
+					RGBresult[y][x] = temp2[size / 2]; // вытаскиваю срединный элемент
 					delete[] temp1;
 					delete[] temp2;
 				}
@@ -792,7 +792,7 @@ void MedianFilteringTBB(RGBQUAD** &RGB, int height, int width, int kSize, RGBQUA
 
 #pragma region GaussFiltering
 
-//Р¤РѕСЂРјРёСЂРѕРІР°РЅРёРµ РјР°С‚СЂРёС†С‹ РєРѕСЌС„С„РёС†РёРµРЅС‚РѕРІ РґР»СЏ С„РёР»СЊС‚СЂР°С†РёРё Р“Р°СѓСЃСЃР°
+//Формирование матрицы коэффициентов для фильтрации Гаусса
 double** GaussMatrixCoefficients(int kSize, double q) {
 	double** Result = new double*[kSize * 2 + 1];
 	for (int i = 0; i < kSize * 2 + 1; i++)
@@ -810,7 +810,7 @@ double** GaussMatrixCoefficients(int kSize, double q) {
 	return Result;
 }
 
-//Р¤РѕСЂРјРёСЂРѕРІР°РЅРёРµ РјР°С‚СЂРёС†С‹ РєРѕСЌС„С„РёС†РёРµРЅС‚РѕРІ РґР»СЏ С„РёР»СЊС‚СЂР°С†РёРё Р“Р°СѓСЃСЃР° (Open MP)
+//Формирование матрицы коэффициентов для фильтрации Гаусса (Open MP)
 double** GaussMatrixCoefficientsOMP(int kSize, double q) {
 	double** Result = new double*[kSize * 2 + 1];
 	for (int i = 0; i < kSize * 2 + 1; i++)
@@ -831,11 +831,11 @@ double** GaussMatrixCoefficientsOMP(int kSize, double q) {
 	return Result;
 }
 
-//Р›РёРЅРµР№РЅС‹Р№ С„РёР»СЊС‚СЂ Р“Р°СѓСЃСЃР° РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅС‹Р№;
-//Р’РѕР·РІСЂР°С‰Р°РµС‚ RGBresult СѓРєР°Р·С‹РІР°СЋС‰РёР№ РЅР° РІС‹С…РѕРґРЅСѓСЋ РєР°СЂС‚РёРЅРєСѓ
+//Линейный фильтр Гаусса последовательный;
+//Возвращает RGBresult указывающий на выходную картинку
 void LineGaussFiltering(RGBQUAD** &RGB, int height, int width, int kSize, RGBQUAD** &RGBresult)
 {
-	double** CoefMatrix = GaussMatrixCoefficients(kSize, kSize / 3.0); //РЎРёРіРјР° С‚СѓС‚
+	double** CoefMatrix = GaussMatrixCoefficients(kSize, kSize / 3.0); //Сигма тут
 	for (int Y = 0; Y < height; Y++)
 	{
 		for (int X = 0; X < width; X++)
@@ -877,11 +877,11 @@ void LineGaussFiltering(RGBQUAD** &RGB, int height, int width, int kSize, RGBQUA
 	delete[] CoefMatrix;
 }
 
-//Р›РёРЅРµР№РЅС‹Р№ С„РёР»СЊС‚СЂ Р“Р°СѓСЃСЃР° (Open MP);
-//Р’РѕР·РІСЂР°С‰Р°РµС‚ RGBresult СѓРєР°Р·С‹РІР°СЋС‰РёР№ РЅР° РІС‹С…РѕРґРЅСѓСЋ РєР°СЂС‚РёРЅРєСѓ
+//Линейный фильтр Гаусса (Open MP);
+//Возвращает RGBresult указывающий на выходную картинку
 void LineGaussFilteringOMP(RGBQUAD** &RGB, int height, int width, int kSize, RGBQUAD** &RGBresult)
 {
-	double** CoefMatrix = GaussMatrixCoefficientsOMP(kSize, kSize / 3.0); //РЎРёРіРјР° С‚СѓС‚
+	double** CoefMatrix = GaussMatrixCoefficientsOMP(kSize, kSize / 3.0); //Сигма тут
 #pragma omp parallel for
 	for (int Y = 0; Y < height; Y++)
 	{
@@ -924,17 +924,17 @@ void LineGaussFilteringOMP(RGBQUAD** &RGB, int height, int width, int kSize, RGB
 	delete[] CoefMatrix;
 }
 
-//Р›РёРЅРµР№РЅС‹Р№ С„РёР»СЊС‚СЂ Р“Р°СѓСЃСЃР° (TBB);
-//Р’РѕР·РІСЂР°С‰Р°РµС‚ RGBresult СѓРєР°Р·С‹РІР°СЋС‰РёР№ РЅР° РІС‹С…РѕРґРЅСѓСЋ РєР°СЂС‚РёРЅРєСѓ
+//Линейный фильтр Гаусса (TBB);
+//Возвращает RGBresult указывающий на выходную картинку
 void LineGaussFilteringTBB(RGBQUAD** &RGB, int height, int width, int kSize, RGBQUAD** &RGBresult)
 {
-	// Р—Р°РїРѕР»РЅРµРЅРёРµ РјР°С‚СЂРёС†С‹ РєРѕСЌС„С„РёС†РёРµРЅС‚РѕРІ
+	// Заполнение матрицы коэффициентов
 	double** CoefMatrix;
 	tbb::task_group g;
-	g.run([&] { CoefMatrix = GaussMatrixCoefficients(kSize, kSize / 3.0); }); //РЎРёРіРјР° С‚СѓС‚
+	g.run([&] { CoefMatrix = GaussMatrixCoefficients(kSize, kSize / 3.0); }); //Сигма тут
 	g.wait();
 
-	tbb::parallel_for(tbb::blocked_range2d<int>(0, width, 0, height), [&](tbb::blocked_range2d<int> r)
+	tbb::parallel_for(tbb::blocked_range2d<int>(0, height, 0, width), [&](tbb::blocked_range2d<int> r)
 		{
 			for (int Y = r.rows().begin(); Y < r.rows().end(); Y++)
 			{
@@ -1026,9 +1026,14 @@ void FilteringFuncAverageTime(int filtheringMethodIndex, string fileName, string
 			LineGaussFiltering(sourceImage, info.biHeight, info.biWidth, kSize, resultImage);
 			break;
 		}
-		default:
+		case 4:
 		{
 			LineGaussFilteringOMP(sourceImage, info.biHeight, info.biWidth, kSize, resultImage);
+			break;
+		}
+		default:
+		{
+			LineGaussFilteringTBB(sourceImage, info.biHeight, info.biWidth, kSize, resultImage);
 			break;
 		}
 		}
@@ -1066,9 +1071,9 @@ void TaskFilteringMethods()
 {
 	std::ofstream resultsFile;
 
-	string* filteringFuncsNames = new string[6]{ "РњРµРґРёР°РЅРЅС‹Р№ С„РёР»СЊС‚СЂ (РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅС‹Р№)", "РњРµРґРёР°РЅРЅС‹Р№ С„РёР»СЊС‚СЂ (Open MP)", "РњРµРґРёР°РЅРЅС‹Р№ С„РёР»СЊС‚СЂ (TBB)", "Р¤РёР»СЊС‚СЂ Р“Р°СѓСЃСЃР° (РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅС‹Р№)", "Р¤РёР»СЊС‚СЂ Р“Р°СѓСЃСЃР° (Open MP)", "Р¤РёР»СЊС‚СЂ Р“Р°СѓСЃСЃР°(TBB)" };
-	string* inputFiles = new string[4]{ "500x500.bmp", "720x480.bmp", "1280x720.bmp", "1920x1080.bmp" };
-	int* kSize = new int[3]{ 3, 9, 12 };
+	string* filteringFuncsNames = new string[6]{ "Медианный фильтр (последовательный)", "Медианный фильтр (Open MP)", "Медианный фильтр (TBB)", "Фильтр Гаусса (последовательный)", "Фильтр Гаусса (Open MP)", "Фильтр Гаусса(TBB)" };
+	string* inputFiles = new string[4]{ "500x500.bmp", "840x480.bmp", "1280x720.bmp", "1920x1080.bmp" };
+	int* kSize = new int[3]{ 3, 6, 9 };
 	int iterations = 20;
 	stringstream ss;
 	double time;
@@ -1079,10 +1084,10 @@ void TaskFilteringMethods()
 		T1[i] = new double[4];
 	}
 	resultsFile.open("Task2Results.csv", std::ios_base::app);
-	resultsFile << "Р¤СѓРЅРєС†РёСЏ;РџРѕС‚РѕРєРё;Ksize;РќР”1;;РќР”2;;РќР”3;;РќР”4\n";
-	resultsFile << ";;;Р’СЂРµРјСЏ;Sp(n);Р’СЂРµРјСЏ;Sp(n);Р’СЂРµРјСЏ;Sp(n);Р’СЂРµРјСЏ;Sp(n);\n";
+	resultsFile << "Функция;Потоки;Ksize;НД1;;НД2;;НД3;;НД4\n";
+	resultsFile << ";;;Время;Sp(n);Время;Sp(n);Время;Sp(n);Время;Sp(n);\n";
 
-	for (int j = 5; j < 6; j++)
+	for (int j = 0; j < 6; j++)
 	{
 		resultsFile << filteringFuncsNames[j] << ";";
 		cout << "___" << filteringFuncsNames[j] << "___" << endl;
@@ -1098,8 +1103,8 @@ void TaskFilteringMethods()
 				resultsFile << ";";
 
 			resultsFile << t << ";";
-			std::cout << "РџРѕС‚РѕРєРѕРІ: " << t << endl;
-			for (int k = 0; k < 1; k++)
+			std::cout << "Потоков: " << t << endl;
+			for (int k = 0; k < 3; k++)
 			{
 				if (k != 0)
 					resultsFile << ";;";
@@ -1109,12 +1114,12 @@ void TaskFilteringMethods()
 				for (int d = 2; d < 3; d++)
 				{
 					ss = stringstream();
-					ss << inputFiles[d] << "_ouput_" << filteringFuncsNames[j] << "_k" << kSize[k] << ".bmp";
+					ss << "2_Задание_" << inputFiles[d] << "_ouput_" << filteringFuncsNames[j] << "_k" << kSize[k] << ".bmp";
 					std::cout << "Input file: " << inputFiles[d] << endl;
 					FilteringFuncAverageTime(j, inputFiles[d], ss.str(), kSize[k], time, 20);
 					if (j == 0 || j == 3)
 						T1[k][d] = time;
-					std::cout << "Р”Р»РёС‚РµР»СЊРЅРѕСЃС‚СЊ: " << time << " СЃ." << endl;
+					std::cout << "Длительность: " << time << " с." << endl;
 					resultsFile << time << "^;" << (double)T1[k][d] / time << "^;";
 				}
 				resultsFile << endl;
@@ -1130,15 +1135,15 @@ void TaskFilteringMethods()
 
 #pragma region Texturing
 
-// Р¤РѕСЂРјРёСЂСѓРµС‚ РіРёСЃС‚РѕРіСЂР°РјРјСѓ РЅР° РѕСЃРЅРѕРІРµ РєР°СЂС‚С‹ СЏСЂРєРѕСЃС‚Рё РІ СЂР°РјРєРµ СЃ СЂР°РґРёСѓСЃР°РјРё RH, RW РЅР° РїРѕР·РёС†РёРё (x,y)
+// Формирует гистограмму на основе карты яркости в рамке с радиусами RH, RW на позиции (x,y)
 vector<float> formHist(BYTE** &BrMap, int height, int width, int x, int y, int RH, int RW)
 {
 	int index = 0;
 	int coordX;
 	int coordY;
-	//РёРЅРёС†РёР°Р»РёР·РёСЂСѓСЋ РЅСѓР»СЏРјРё
+	//инициализирую нулями
 	vector<float> hist = vector<float>(256);
-	//РїСЂРѕС…РѕР¶Сѓ РїРѕ СЂР°РјРєРµ
+	//прохожу по рамке
 	for (int Y = -RH; Y <= RH; Y++)
 	{
 		coordY = y + Y;
@@ -1156,30 +1161,30 @@ vector<float> formHist(BYTE** &BrMap, int height, int width, int x, int y, int R
 
 			if (coordY >= height)
 				coordY = height - 1;
-			//РёРЅРєСЂРµРјРµРЅС‚РёСЂСѓРµС‚ СЌР»РµРјРµРЅС‚ РіРёСЃС‚РѕРіСЂР°РјРјС‹, СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РёР№ СЏСЂРєРѕСЃС‚Рё С‚РµРєСѓС‰РµРіРѕ РїРёРєСЃРµР»СЏ
+			//инкрементирует элемент гистограммы, соответствующий яркости текущего пикселя
 			hist[BrMap[coordY][coordX]] += 1;
 
 		}
 	}
 
-	//РѕРїСЂРµРґРµР»СЋ РєРѕР»РёС‡РµСЃС‚РІРѕ РїРёРєСЃРµР»РµР№ РІ СЂР°РјРєРµ
+	//определю количество пикселей в рамке
 	int size = (RH * 2 + 1)*(RW * 2 + 1);
-	//РЅРѕСЂРјРёСЂСѓСЋ РіРёСЃС‚РѕРіСЂР°РјРјСѓ
+	//нормирую гистограмму
 	for (int i = 0; i < 256; i++)
 		hist[i] /= size;
 	return hist;
 }
 
-// Р¤РѕСЂРјРёСЂСѓРµС‚ РіРёСЃС‚РѕРіСЂР°РјРјСѓ РЅР° РѕСЃРЅРѕРІРµ РєР°СЂС‚С‹ СЏСЂРєРѕСЃС‚Рё РІ СЂР°РјРєРµ СЃ СЂР°РґРёСѓСЃР°РјРё RH, RW РЅР° РїРѕР·РёС†РёРё (x,y)
-//РџР°СЂР°Р»Р»РµР»СЊРЅС‹Р№ РІР°СЂРёР°РЅС‚ СЃ РёСЃРїРѕР»СЊР·РѕРІР°РЅРёРµРј С†РёРєР»РѕРІ РёР· РћРњРџ
+// Формирует гистограмму на основе карты яркости в рамке с радиусами RH, RW на позиции (x,y)
+//Параллельный вариант с использованием циклов из ОМП
 vector<float> formHistOMP(BYTE** &BrMap, int height, int width, int x, int y, int RH, int RW)
 {
 	int index = 0;
 	int coordX;
 	int coordY;
-	//РёРЅРёС†РёР°Р»РёР·РёСЂСѓСЋ РЅСѓР»СЏРјРё
+	//инициализирую нулями
 	vector<float> hist = vector<float>(256);
-	//РїСЂРѕС…РѕР¶Сѓ РїРѕ СЂР°РјРєРµ
+	//прохожу по рамке
 #pragma omp parallel for shared(BrMap, hist) firstprivate(x, y, width, height, RH, RW) schedule(dynamic, 35)
 	for (int Y = -RH; Y <= RH; Y++)
 	{
@@ -1198,7 +1203,7 @@ vector<float> formHistOMP(BYTE** &BrMap, int height, int width, int x, int y, in
 
 			if (coordY >= height)
 				coordY = height - 1;
-			//РёРЅРєСЂРµРјРµРЅС‚РёСЂСѓРµС‚ СЌР»РµРјРµРЅС‚ РіРёСЃС‚РѕРіСЂР°РјРјС‹, СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РёР№ СЏСЂРєРѕСЃС‚Рё С‚РµРєСѓС‰РµРіРѕ РїРёРєСЃРµР»СЏ
+			//инкрементирует элемент гистограммы, соответствующий яркости текущего пикселя
 #pragma omp critical
 			{
 				hist[BrMap[coordY][coordX]] += 1;
@@ -1207,15 +1212,15 @@ vector<float> formHistOMP(BYTE** &BrMap, int height, int width, int x, int y, in
 		}
 	}
 
-	//РѕРїСЂРµРґРµР»СЋ РєРѕР»РёС‡РµСЃС‚РІРѕ РїРёРєСЃРµР»РµР№ РІ СЂР°РјРєРµ
+	//определю количество пикселей в рамке
 	int size = (RH * 2 + 1)*(RW * 2 + 1);
-	//РЅРѕСЂРјРёСЂСѓСЋ РіРёСЃС‚РѕРіСЂР°РјРјСѓ
+	//нормирую гистограмму
 	for (int i = 0; i < 256; i++)
 		hist[i] /= size;
 	return hist;
 }
 
-//РЎРѕР·РґР°С‘С‚ РјРµС‚СЂРёРєРё РїРѕ С‚РµРєСѓС‰РµР№ РіРёСЃС‚РѕРіСЂР°РјРјРµ
+//Создаёт метрики по текущей гистограмме
 void getMetrics(float &m2, float &u, float &r, float &e, vector<float> &hist)
 {
 	float m = 0;
@@ -1232,8 +1237,8 @@ void getMetrics(float &m2, float &u, float &r, float &e, vector<float> &hist)
 	e *= -1;
 }
 
-//РЎРѕР·РґР°С‘С‚ РјРµС‚СЂРёРєРё РїРѕ С‚РµРєСѓС‰РµР№ РіРёСЃС‚РѕРіСЂР°РјРјРµ
-//РџР°СЂР°Р»Р»РµР»СЊРЅС‹Р№ РІР°СЂРёР°РЅС‚ СЃ РёСЃРїРѕР»СЊР·РѕРІР°РЅРёРµРј С†РёРєР»РѕРІ Рё СЃРµРєС†РёР№ РёР· РћРњРџ
+//Создаёт метрики по текущей гистограмме
+//Параллельный вариант с использованием циклов и секций из ОМП
 void getMetricsOmp(float &m2, float &u, float &r, float &e, vector<float> &hist)
 {
 	float m = 0;
@@ -1293,11 +1298,7 @@ void getMetricsOmp(float &m2, float &u, float &r, float &e, vector<float> &hist)
 	e *= -1;
 }
 
-//РќР° РІС…РѕРґ РёР·РѕР±СЂР°Р¶РµРЅРёРµ Рё СЂР°Р·РјРµСЂ СЂР°РјРєРё
-//РЈРєР°Р·Р°С‚РµР»Рё M,U,R,E РґРѕР»Р¶РЅС‹ Р±С‹С‚СЊ РёРЅРёС†РёР°Р»РёР·РёСЂРѕРІР°РЅС‹
-//Р’С‹С…РѕРґ:
-//РњРѕРјРµРЅС‚С‹ РІС‚РѕСЂРѕРіРѕ РїРѕСЂСЏРґРєР°, РѕРґРЅРѕСЂРѕРґРЅРѕСЃС‚СЊ, РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅР°СЏ РіР»Р°РґРєРѕСЃС‚СЊ, РµРЅС‚СЂРѕРїРёСЏ
-//Moments, Uniform, Relative, Enthropy
+//Определение текстурных признаков
 void textureFilter(RGBQUAD **&image, int height, int width, int rh, int rw, float **&M, float **&U, float **&R, float **&E)
 {
 	vector<float> hist;//256
@@ -1306,7 +1307,7 @@ void textureFilter(RGBQUAD **&image, int height, int width, int rh, int rw, floa
 	for (int y = 0; y < height; y++)
 	{
 		Brightness[y] = new BYTE[width]();
-		//РїРµСЂРµРІРѕР¶Сѓ С†РІРµС‚РЅСѓСЋ РєР°СЂС‚РёРЅРєСѓ РІ РєР°СЂС‚Сѓ СЏСЂРєРѕСЃС‚Рё
+		//перевожу цветную картинку в карту яркости
 		for (int x = 0; x < width; x++)
 			Brightness[y][x] = image[y][x].rgbRed*0.299 + image[y][x].rgbGreen*0.587 + image[y][x].rgbBlue*0.114;
 	}
@@ -1314,20 +1315,15 @@ void textureFilter(RGBQUAD **&image, int height, int width, int rh, int rw, floa
 	for (int y = 0; y < height; y++)
 		for (int x = 0; x < width; x++)
 		{
-			//РїРѕР»СѓС‡Р°СЋ РіРёСЃС‚РѕРіСЂР°РјРјСѓ РґР»СЏ РѕРєРЅР°
+			//получаю гистограмму для окна
 			hist = formHist(Brightness, height, width, x, y, rh, rw);
-			//РїРѕР»СѓС‡Р°СЋ РјРµС‚СЂРёРєРё РґР»СЏ С‚РµРєСѓС‰РµРіРѕ РїРѕР»РѕР¶РµРЅРёСЏ РѕРєРЅР°
+			//получаю метрики для текущего положения окна
 			getMetrics(M[y][x], U[y][x], R[y][x], E[y][x], hist);
 		}
-	//РІРѕР·РІСЂР°С‰Р°СЋ РјРµС‚СЂРёРєРё РЅР°РІРµСЂС…
+	//возвращаю метрики наверх
 }
 
-//РќР° РІС…РѕРґ РёР·РѕР±СЂР°Р¶РµРЅРёРµ Рё СЂР°Р·РјРµСЂ СЂР°РјРєРё
-//РЈРєР°Р·Р°С‚РµР»Рё M,U,R,E РґРѕР»Р¶РЅС‹ Р±С‹С‚СЊ РёРЅРёС†РёР°Р»РёР·РёСЂРѕРІР°РЅС‹
-//Р’С‹С…РѕРґ:
-//РњРѕРјРµРЅС‚С‹ РІС‚РѕСЂРѕРіРѕ РїРѕСЂСЏРґРєР°, РѕРґРЅРѕСЂРѕРґРЅРѕСЃС‚СЊ, РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅР°СЏ РіР»Р°РґРєРѕСЃС‚СЊ, РµРЅС‚СЂРѕРїРёСЏ
-//Moments, Uniform, Relative, Enthropy
-//РџР°СЂР°Р»Р»РµР»СЊРЅР°СЏ СЂРµР°Р»РёР·Р°С†РёСЏ, РёСЃРїРѕР»СЊР·СѓРµС‚ СЂР°СЃРїР°СЂР°Р»Р»РµР»РёРІР°РЅРёРµ РІРЅРµС€РЅРµРіРѕ С†РёРєР»Р° РЅР° Omp For
+//Параллельная реализация, использует распараллеливание внешнего цикла на Omp For
 void textureFilterOMP(RGBQUAD **&image, int height, int width, int rh, int rw, float **&M, float **&U, float **&R, float **&E)
 {
 	BYTE **Brightness = new BYTE*[height];
@@ -1338,7 +1334,7 @@ void textureFilterOMP(RGBQUAD **&image, int height, int width, int rh, int rw, f
 		Brightness[y] = new BYTE[width];
 
 		for (int x = 0; x < width; x++)
-			//РїРµСЂРµРІРѕР¶Сѓ С†РІРµС‚РЅСѓСЋ РєР°СЂС‚РёРЅРєСѓ РІ РєР°СЂСѓС‚ СЏСЂРєРѕСЃС‚Рё
+			//перевожу цветную картинку в карут яркости
 			Brightness[y][x] = image[y][x].rgbRed*0.299 + image[y][x].rgbGreen*0.587 + image[y][x].rgbBlue*0.114;
 	}
 
@@ -1346,20 +1342,15 @@ void textureFilterOMP(RGBQUAD **&image, int height, int width, int rh, int rw, f
 	for (int y = 0; y < height; y++)
 		for (int x = 0; x < width; x++)
 		{
-			//РїРѕР»СѓС‡Р°СЋ РіРёСЃС‚РѕРіСЂР°РјРјСѓ РґР»СЏ РѕРєРЅР°
+			//получаю гистограмму для окна
 			vector<float> hist = formHist(Brightness, height, width, x, y, rh, rw);
-			//РїРѕР»СѓС‡Р°СЋ РјРµС‚СЂРёРєРё РґР»СЏ С‚РµРєСѓС‰РµРіРѕ РїРѕР»РѕР¶РµРЅРёСЏ РѕРєРЅР°
+			//получаю метрики для текущего положения окна
 			getMetrics(M[y][x], U[y][x], R[y][x], E[y][x], hist);
 		}
-	//РІРѕР·РІСЂР°С‰Р°СЋ РјРµС‚СЂРёРєРё РЅР°РІРµСЂС…
+	//возвращаю метрики наверх
 }
 
-//РќР° РІС…РѕРґ РёР·РѕР±СЂР°Р¶РµРЅРёРµ Рё СЂР°Р·РјРµСЂ СЂР°РјРєРё
-//РЈРєР°Р·Р°С‚РµР»Рё M,U,R,E РґРѕР»Р¶РЅС‹ Р±С‹С‚СЊ РёРЅРёС†РёР°Р»РёР·РёСЂРѕРІР°РЅС‹
-//Р’С‹С…РѕРґ:
-//РњРѕРјРµРЅС‚С‹ РІС‚РѕСЂРѕРіРѕ РїРѕСЂСЏРґРєР°, РѕРґРЅРѕСЂРѕРґРЅРѕСЃС‚СЊ, РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅР°СЏ РіР»Р°РґРєРѕСЃС‚СЊ, РµРЅС‚СЂРѕРїРёСЏ
-//Moments, Uniform, Relative, Enthropy
-//РџР°СЂР°Р»РµР»Р»СЊРЅС‹Р№ РІР°СЂРёР°РЅС‚ СЃ РІРЅРµС€РЅРёРј СЂР°СЃРїР°СЂР°Р»Р»РµР»РёРІР°РЅРёРµРј cilk_for
+//Паралелльный вариант с внешним распараллеливанием parallel_for
 void textureFilterTBB(RGBQUAD **&image, int height, int width, int rh, int rw, float **&M, float **&U, float **&R, float **&E)
 {
 	BYTE **Brightness = new BYTE*[height];
@@ -1368,7 +1359,7 @@ void textureFilterTBB(RGBQUAD **&image, int height, int width, int rh, int rw, f
 			for (int y = r.begin(); y < r.end(); y++)
 			{
 				Brightness[y] = new BYTE[width];
-				//РїРµСЂРµРІРѕР¶Сѓ С†РІРµС‚РЅСѓСЋ РєР°СЂС‚РёРЅРєСѓ РІ РєР°СЂСѓС‚ СЏСЂРєРѕСЃС‚Рё
+				//перевожу цветную картинку в карут яркости
 				for (int x = 0; x < width; x++)
 					Brightness[y][x] = image[y][x].rgbRed*0.299 + image[y][x].rgbGreen*0.587 + image[y][x].rgbBlue*0.114;
 			}
@@ -1390,9 +1381,7 @@ void textureFilterTBB(RGBQUAD **&image, int height, int width, int rh, int rw, f
 
 #pragma region Task3_Texturing
 
-//РћС†РµРЅРёРІР°РµС‚ РєР°СЂС‚Сѓ РјРµС‚СЂРёРє, РІРѕР·РІСЂР°С‰Р°РµС‚ РјРёРЅРёРјР°Р»СЊРЅРѕРµ Рё РјР°РєСЃРёРјР°Р»СЊРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ РїСЂРёР·РЅР°РєРѕРІ
-//map - РјР°СЃСЃРёРІ РїСЂРёР·РЅР°РєРѕРІ
-//Height, Width - РІС‹СЃРѕС‚Р° Рё С€РёСЂРёРЅР° РєР°СЂС‚С‹
+//Оценивает карту метрик, возвращает минимальное и максимальное значение признаков
 void getInterval(float** &map, int Height, int Width, float& _min, float& _max)
 {
 	_min = map[0][0];
@@ -1405,44 +1394,36 @@ void getInterval(float** &map, int Height, int Width, float& _min, float& _max)
 		}
 }
 
-//Р¤СѓРЅРєС†РёСЏ С„РѕСЂРјРёСЂСѓСЋС‰Р°СЏ РєР°СЂС‚РёРЅРєСѓ РїРѕ РєР°СЂС‚Рµ РїСЂРёР·РЅР°РєРѕРІ
-//head, info - СЃР»СѓР¶РµР±РЅС‹Рµ РїРѕР»СЏ BMP С„Р°Р№Р»Р°
-//T - РєР°СЂС‚Р° РїСЂРёР·РЅР°РєРѕРІ, Height, Width - РІС‹СЃРѕС‚Р° Рё С€РёСЂРёРЅР° РєР°СЂС‚С‹
-//fname - РЅР°Р·РІР°РЅРёРµ С„Р°Р№Р»Р° РІ РєРѕС‚РѕСЂС‹Р№ Р±СѓРґРµС‚ СЃРѕС…СЂР°РЅРµРЅ СЂРµР·СѓР»СЊС‚Р°С‚
-//t1, t2 - РїРѕСЂРѕРіРё Р·РЅР°С‡РµРЅРёР№, РїСЂРёРЅРёРјР°СЋС‚ Р·РЅР°С‡РµРЅРёРµ РІ РґРёР°РїР°Р·РѕРЅР°С… (0, 0.5) (0.5, 1) СЃРѕРѕС‚РІРµС‚СЃС‚РІРµРЅРЅРѕ
+//Функция формирующая картинку по карте признаков
 void formImage(BITMAPFILEHEADER head, BITMAPINFOHEADER info, float** &T, int Height, int Width, string fname, float t1, float t2)
 {
 	float Max = 0, Min = 0;
 	getInterval(T, Height, Width, Min, Max);
 	float T1 = (Max - Min)*t1 + Min;
 	float T2 = (Max - Min)*t2 + Min;
-	//std::cout << "Min = " << Min << endl;
-	//std::cout << "Max = " << Max << endl;
-	//std::cout << "T1 = " << T1 << endl;
-	//std::cout << "T2 = " << T2 << endl;
 	RGBQUAD** out = new RGBQUAD*[Height];
 	for (int y = 0; y < Height; y++)
 	{
 		out[y] = new RGBQUAD[Width]();
 		for (int x = 0; x < Width; x++)
 		{
-			//Р•СЃР»Рё РІ РїРµСЂРІРѕРј РґРёР°РїР°Р·РѕРЅРµ, С‚Рѕ РєСЂР°С€Сѓ РІ Р·РµР»РµРЅС‹Р№
+			//Если в первом диапазоне, то крашу в зеленый
 			if (T[y][x] >= T2 && T[y][x] <= Max)
 				out[y][x].rgbGreen = 255;
 
-			//Р•СЃР»Рё РІРѕ РІС‚РѕСЂРѕРј РґРёР°РїР°Р·РѕРЅРµ, С‚Рѕ РєСЂР°С€Сѓ РІ Р¶РµР»С‚С‹Р№
+			//Если во втором диапазоне, то крашу в желтый
 			if (T[y][x] >= T1 && T[y][x] < T2)
 			{
 				out[y][x].rgbRed = 255;
 				out[y][x].rgbGreen = 255;
 			}
 
-			//Р•СЃР»Рё РІ РїРµСЂРІРѕРј РґРёР°РїР°Р·РѕРЅРµ, С‚Рѕ РєСЂР°С€Сѓ РІ РєСЂР°СЃРЅС‹Р№
+			//Если в первом диапазоне, то крашу в красный
 			if (T[y][x] >= Min && T[y][x] < T1)
 				out[y][x].rgbRed = 255;
 		}
 	}
-	//РЎРѕС…СЂР°РЅСЏСЋ РІ С„Р°Р№Р»
+	//Сохраняю в файл
 	BMPWrite(out, head, info, fname.c_str());
 	for (int i = 0; i < Height; i++)
 		delete[] out[i];
@@ -1458,54 +1439,71 @@ void CalcTexturingFunc(TextureFilterMethod func, string fileName, string methodF
 	float **M, **U, **R, **E;
 	stringstream str;
 
+	RGBQUAD** sourceImage;
+	BITMAPFILEHEADER head;
+	BITMAPINFOHEADER info;
+	BMPRead(sourceImage, head, info, fileName.c_str());
+	M = new float*[info.biHeight];
+	U = new float*[info.biHeight];
+	R = new float*[info.biHeight];
+	E = new float*[info.biHeight];
+	for (int i = 0; i < info.biHeight; i++)
+	{
+		M[i] = new float[info.biWidth]();
+		U[i] = new float[info.biWidth]();
+		R[i] = new float[info.biWidth]();
+		E[i] = new float[info.biWidth]();
+	}
+
 	std::cout << "[";
 	for (int i = 0; i < iterations; i++)
 	{
-		RGBQUAD** sourceImage;
-		BITMAPFILEHEADER head;
-		BITMAPINFOHEADER info;
-		BMPRead(sourceImage, head, info, fileName.c_str());
-		M = new float*[info.biHeight];
-		U = new float*[info.biHeight];
-		R = new float*[info.biHeight];
-		E = new float*[info.biHeight];
-		for (int i = 0; i < info.biHeight; i++)
-		{
-			M[i] = new float[info.biWidth]();
-			U[i] = new float[info.biWidth]();
-			R[i] = new float[info.biWidth]();
-			E[i] = new float[info.biWidth]();
-		}
 		
 		startTime = omp_get_wtime();
 		func(sourceImage, info.biHeight, info.biWidth, window, window, M, U, R, E);
+		std::cout << "#";
 		curTime = omp_get_wtime() - startTime;
 
 		Times[i] = curTime;
 		avgTime += curTime;
-		std::cout << "#";
 
 		if (i == 0)
 		{
-			//СЃРѕС…СЂР°РЅРµРЅРёРµ РїРѕР»СѓС‡РёРІС€РёС…СЃСЏ РёР·РѕР±СЂР°Р¶РµРЅРёР№ РІ С„Р°Р№Р»С‹
+			//сохранение получившихся изображений в файлы
 			str = stringstream();
-			str << fileName << "-M-" << "(" << methodFullName << ")[" << window << "].bmp";
+			str << "3_Задание_" << fileName << "_M_" << "(" << methodFullName << ")[" << window << "].bmp";
 			formImage(head, info, M, info.biHeight, info.biWidth, str.str().c_str(), 0.2, 0.8);
 			str = stringstream();
-			str << fileName << "-U-" << "(" << methodFullName << ")[" << window << "].bmp";
+			str << "3_Задание_" << fileName << "_U_" << "(" << methodFullName << ")[" << window << "].bmp";
 			formImage(head, info, U, info.biHeight, info.biWidth, str.str().c_str(), 0.2, 0.8);
 			str = stringstream();
-			str << fileName << "-R-" << "(" << methodFullName << ")[" << window << "].bmp";
+			str << "3_Задание_" << fileName << "_R_" << "(" << methodFullName << ")[" << window << "].bmp";
 			formImage(head, info, R, info.biHeight, info.biWidth, str.str().c_str(), 0.2, 0.8);
 			str = stringstream();
-			str << fileName << "-E-" << "(" << methodFullName << ")[" << window << "].bmp";
+			str << "3_Задание_" << fileName << "_E_" << "(" << methodFullName << ")[" << window << "].bmp";
 			formImage(head, info, E, info.biHeight, info.biWidth, str.str().c_str(), 0.2, 0.8);
 		}
-
-		for (int i = 0; i < info.biHeight; i++)
-			delete[] sourceImage[i];
-		delete[] sourceImage;
 	}
+
+	std::cout << "]\n";
+	avgTime /= iterations;
+	avgTimeT = AvgTrustedInterval(avgTime, Times, iterations);
+	time = avgTimeT;
+
+	for (int i = 0; i < info.biHeight; i++)
+	{
+		delete[] sourceImage[i];
+		delete[] M[i];
+		delete[] U[i];
+		delete[] R[i];
+		delete[] E[i];
+	}
+
+	delete[] sourceImage;
+	delete[] M;
+	delete[] U;
+	delete[] R;
+	delete[] E;
 }
 
 void CalcTexturingFuncs()
@@ -1513,50 +1511,55 @@ void CalcTexturingFuncs()
 	std::ofstream resultsFile;
 	resultsFile.open("Task3Results.csv", std::ios_base::app);
 	string inputFiles[2] = { "1280x720.bmp", "1920x1080.bmp" };
-	string* funcsName = new string[3]{ "Р’С‹С‡РёСЃР»РµРЅРёРµ С‚РµРєСЃС‚СѓСЂРЅС‹С… РїСЂРёР·РЅР°РєРѕРІ (РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕ)", "Р’С‹С‡РёСЃР»РµРЅРёРµ С‚РµРєСЃС‚СѓСЂРЅС‹С… РїСЂРёР·РЅР°РєРѕРІ (Open MP)", "Р’С‹С‡РёСЃР»РµРЅРёРµ С‚РµРєСЃС‚СѓСЂРЅС‹С… РїСЂРёР·РЅР°РєРѕРІ (TBB)" };
+	string* funcsName = new string[3]{ "Вычисление текстурных признаков (последовательно)", "Вычисление текстурных признаков (Open MP)", "Вычисление текстурных признаков (TBB)" };
 	int* windowSizes = new int[3]{5, 7, 9};
+	
 	TextureFilterMethod* texturingFuncs = new TextureFilterMethod[3]{ textureFilter, textureFilterOMP, textureFilterTBB };
 	double posled[3][2];
 	double time, spd;
 	int iterations = 10;
-	resultsFile << "РќР°Р·РІР°РЅРёРµ С„СѓРЅРєС†РёРё;РљРѕР»-РІРѕ РїРѕС‚РѕРєРѕРІ;РћРєСЂРµСЃС‚РЅРѕСЃС‚СЊ;РќР”1;;РќР”2;;\n";
-	resultsFile << ";;;Р’СЂРµРјСЏ;Sp;Р’СЂРµРјСЏ;Sp;\n";
-	for (int m = 0; m < 5; m++)
+
+	resultsFile << "Название функции;Кол-во потоков;Окрестность;НД1;;НД2;;\n";
+	resultsFile << ";;;Время;Sp;Время;Sp;\n";
+	for (int m = 0; m < 3; m++)
 	{
-		cout << "Р¤СѓРЅРєС†РёСЏ: " << funcsName[m] << endl;
+		cout << "Функция: " << funcsName[m] << endl;
 		resultsFile << funcsName[m] << ";";
 		for (int t = 2; t < 5; t++)
 		{
-			resultsFile << t << ";";
-			cout << "РљРѕР»-РІРѕ РїРѕС‚РѕРєРѕРІ: " << t << endl;
+			if (t != 2)
+			{
+				resultsFile << ";";
+			}
+
 			if (m == 0)
 			{
 				t = 1;
 			}
 
+			resultsFile << t << ";";
+			cout << "Кол-во потоков: " << t << endl;
 			omp_set_num_threads(t);
 			global_control global_limit(global_control::max_allowed_parallelism, t);
 
 			for (int k = 0; k < 3; k++)
 			{
-
 				if (k != 0)
 					resultsFile << ";;";
 
-				cout << "РћРєРЅРѕ СЂР°Р·РјРµСЂРѕРј: " << windowSizes[k] << "x" << windowSizes[k] << endl;
+				cout << "Окно размером: " << windowSizes[k] << "x" << windowSizes[k] << endl;
 				resultsFile << windowSizes[k] << "x" << windowSizes[k] << ";";
 
 				for (int img = 0; img < 2; img++)
 				{
-					cout << "РР·РѕР±СЂР°Р¶РµРЅРёРµ: " << inputFiles[img] << endl;
+					cout << "Изображение: " << inputFiles[img] << endl;
 					CalcTexturingFunc(texturingFuncs[m], inputFiles[img], funcsName[m], windowSizes[k], time, iterations);
-
 					if (m == 0)
 					{
 						posled[k][img] = time;
 					}
 
-					cout << "Р”Р»РёС‚РµР»СЊРЅРѕСЃС‚СЊ: " << time << endl;
+					cout << "Длительность: " << time << endl;
 					resultsFile << time << ";" << posled[k][img] / time << ";";
 				}
 
@@ -1577,34 +1580,31 @@ void CalcTexturingFuncs()
 int main()
 {
 	setlocale(LC_ALL, "Russian");
-	int wait;
+	int wait, choice;
 
-	//int size = 3;
-	//int** matrix1 = new int*[size];
-	//int** matrix2 = new int*[size];
-	//int** result = new int*[size];
-	//
-	//for (int i = 0; i < size; i++)
-	//{
-	//	matrix1[i] = new int[size];
-	//	matrix2[i] = new int[size];
-	//	result[i] = new int[size];
-	//}
-	//
-	//Fill2DMatrix<int>(matrix1, size);
-	//Fill2DMatrix<int>(matrix2, size);
-	//Print2DMatrix<int>(matrix1, size);
-	//
-	//cout << "Posl: ";
-	//MaxElem(matrix1, matrix2, result, size);
-	//cout << "\nOMP: ";
-	//MaxElemOMP(matrix1, matrix2, result, size);
-	//cout << "\nTBB: ";
-	//MaxElemTBB(matrix1, matrix2, result, size);
+	cout << "[1]: Задание 1\n[2]: Задание 2\n[3]: задание 3\n";
+	cin >> choice;
 
-	//CalcMatrixFuncs();
-	CalcTexturingFuncs();
-	
+	switch (choice)
+	{
+		case 1:
+		{
+			CalcMatrixFuncs();
+			break;
+		}
+		case 2:
+		{
+			TaskFilteringMethods();
+			break;
+		}
+		default:
+		{
+			CalcTexturingFuncs();
+			break;
+		}
+	}
+
+	cout << "Конец программы...\n";
 	std::cin >> wait;
 	return 0;
 }
