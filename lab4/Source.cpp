@@ -152,7 +152,7 @@ double** GaussMatrixCoefficients(int kSize, double q) {
 }
 
 //Формирование матрицы коэффициентов для фильтрации Гаусса параллельное
-double** GaussMatrixCoefficientsParallel(int kSize, double q) {
+double** GaussMatrixCoefficientsOMP(int kSize, double q) {
 	double** Result = new double*[kSize * 2 + 1];
 	for (int i = 0; i < kSize * 2 + 1; i++)
 		Result[i] = new double[kSize * 2 + 1];
@@ -220,9 +220,9 @@ void LineGaussFiltering(RGBQUAD** &RGB, int height, int width, int kSize, RGBQUA
 
 //Линейный фильтр Гаусса параллельеный;
 //Возвращает RGBresult указывающий на выходную картинку
-void LineGaussFilteringParallel(RGBQUAD** &RGB, int height, int width, int kSize, RGBQUAD** &RGBresult)
+void LineGaussFilteringOMP(RGBQUAD** &RGB, int height, int width, int kSize, RGBQUAD** &RGBresult)
 {
-	double** CoefMatrix = GaussMatrixCoefficientsParallel(kSize, kSize / 3.0); //Сигма тут
+	double** CoefMatrix = GaussMatrixCoefficientsOMP(kSize, kSize / 3.0); //Сигма тут
 #pragma omp parallel for
 	for (int Y = 0; Y < height; Y++)
 	{
@@ -305,7 +305,7 @@ void FilteringFuncAverageTime(int filtheringMethodIndex, string fileName, string
 		}
 		default:
 		{
-			LineGaussFilteringParallel(sourceImage, info.biHeight, info.biWidth, kSize, resultImage);
+			LineGaussFilteringOMP(sourceImage, info.biHeight, info.biWidth, kSize, resultImage);
 			break;
 		}
 		}
@@ -344,7 +344,7 @@ void TaskFilteringMethods()
 	std::ofstream resultsFile;
 
 	string* filteringFuncsNames = new string[4]{ "Среднеарифметический фильтр (последовательный)", "Среднеарифметический фильтр (параллельный)", "Фильтр Гаусса (последовательный)", "Фильтр Гаусса (параллельный)" };
-	void** filteringFuncs = new void*[4]{ LineMiddleFiltering, LineMiddleFilteringParallel, LineGaussFiltering, LineGaussFilteringParallel };
+	void** filteringFuncs = new void*[4]{ LineMiddleFiltering, LineMiddleFilteringParallel, LineGaussFiltering, LineGaussFilteringOMP };
 	string* inputFiles = new string[4]{ "500x500.bmp", "720x480.bmp", "1600x1200.bmp", "1920x1080.bmp"};
 	int* kSize = new int[3]{ 3, 9, 12 };
 	int iterations = 20;

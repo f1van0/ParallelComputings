@@ -444,7 +444,7 @@ RGBQUAD* sortRGB(RGBQUAD* arr, long length, void* sortFunc)
 }
 
 //сортировка массива –√Ѕ с Omp sections и for
-RGBQUAD* sortRGBAsync(RGBQUAD* arr, long length, void* sortFunc)
+RGBQUAD* sortRGB_OMP(RGBQUAD* arr, long length, void* sortFunc)
 {
 	BYTE *red = new BYTE[length];
 	BYTE *green = new BYTE[length];
@@ -501,7 +501,7 @@ void MedianFiltering(RGBQUAD** &RGB, int height, int width, int kSize, RGBQUAD**
 }
 
 //медианна€ фильтраци€ (параллельна€)
-void medianFilteringParallel(RGBQUAD** &RGB, int height, int width, int kSize, RGBQUAD** &RGBresult, void* sortFunc)
+void MedianFilteringOMP(RGBQUAD** &RGB, int height, int width, int kSize, RGBQUAD** &RGBresult, void* sortFunc)
 {
 	int size = (2 * kSize + 1) * (2 * kSize + 1);
 #pragma omp parallel for
@@ -512,7 +512,7 @@ void medianFilteringParallel(RGBQUAD** &RGB, int height, int width, int kSize, R
 		{
 			//в окне H x W ложу пиксели в массив temp
 			temp1 = getMedial(RGB, width, height, x, y, kSize); //заполн€ю медиальный массив
-			temp2 = sortRGBAsync(temp1, size, sortFunc);
+			temp2 = sortRGB_OMP(temp1, size, sortFunc);
 			RGBresult[y][x] = temp2[size / 2]; // вытаскиваю срединный элемент
 			delete[] temp1;
 			delete[] temp2;
@@ -543,7 +543,7 @@ void FilteringFuncAverageTime(int filtheringMethod, void* sortFunc, string fileN
 		if (filtheringMethod == 0)
 			MedianFiltering(sourceImage, info.biHeight, info.biWidth, kSize, resultImage, sortFunc);
 		else
-			medianFilteringParallel(sourceImage, info.biHeight, info.biWidth, kSize, resultImage, sortFunc);
+			MedianFilteringOMP(sourceImage, info.biHeight, info.biWidth, kSize, resultImage, sortFunc);
 
 		curTime = omp_get_wtime() - startTime;
 		Times[i] = curTime;
