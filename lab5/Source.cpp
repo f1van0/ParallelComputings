@@ -1111,7 +1111,7 @@ void TaskFilteringMethods()
 
 				resultsFile << kSize[k] * 2 + 1 << ";";
 				std::cout << "Ksize = " << kSize[k] * 2 + 1 << endl;
-				for (int d = 2; d < 3; d++)
+				for (int d = 0; d < 4; d++)
 				{
 					ss = stringstream();
 					ss << "2_Задание_" << inputFiles[d] << "_ouput_" << filteringFuncsNames[j] << "_k" << kSize[k] << ".bmp";
@@ -1120,7 +1120,7 @@ void TaskFilteringMethods()
 					if (j == 0 || j == 3)
 						T1[k][d] = time;
 					std::cout << "Длительность: " << time << " с." << endl;
-					resultsFile << time << "^;" << (double)T1[k][d] / time << "^;";
+					resultsFile << time << ";" << (double)T1[k][d] / time << ";";
 				}
 				resultsFile << endl;
 			}
