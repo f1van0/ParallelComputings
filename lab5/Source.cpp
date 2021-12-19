@@ -34,64 +34,77 @@ void Swap(T& one, T& two)
 // Класс для reduce для подсчета суммы элементов в 2 матрицах
 template<class T>
 class reduce_total {
-	T* m1;
-	T* m2;
+private:
+	T** matrixA;
+	T** matrixB;
 	int size;
-
 public:
-	double sumRes1, sumRes2;
-
-	void operator() (blocked_range<size_t>& r) {
-		T sumRes1_local = sumRes1, sumRes2_local = sumRes2;
-		T* m1_local = m1;
-		T* m2_local = m2;
-
-		size_t end = r.end();
-		for (size_t i = r.begin(); i != end; ++i) {
-			sumRes1_local += m1_local[i];
-			sumRes2_local += m2_local[i];
+	T total;//Суммарное значение
+	void operator()(const tbb::blocked_range<size_t>& r)
+	{
+		T** a = matrixA;
+		T** b = matrixB;
+		T val;
+		for (size_t i = r.begin(); i != r.end(); ++i)
+		{
+			for (int j = 0; j < size; j++)
+			{
+				val = a[i][j];
+				total += val;
+				val = b[i][j];
+				total += val;
+			}
 		}
-
-		sumRes1 = sumRes1_local;
-		sumRes2 = sumRes2_local;
 	}
 
-	reduce_total(reduce_total& r, split) : m1(r.m1), m2(r.m2), size(r.size), sumRes1(0.0), sumRes2(0.0) {} // Split
-	void join(const reduce_total& r) { sumRes1 += r.sumRes1; sumRes2 += r.sumRes2; } // Join
+	reduce_total(reduce_total& x, tbb::split) : matrixA(x.matrixA), matrixB(x.matrixB), size(x.size), total(0) {}
 
-	reduce_total(T* orig_m1, T* orig_m2, int orig_size) : m1(orig_m1), m2(orig_m2), size(orig_size), sumRes1(0.0), sumRes2(0.0) {} // Основной конструктор
+	void join(const reduce_total& y)
+	{
+		total += y.total;
+	}
+
+	reduce_total(T** A, T** B, const int length) : matrixA(A), matrixB(B), size(length), total(0) {}
 };
 
 //Класс для reduce для нахождения максимального значения в 2 матрицах
 template<class T>
 class reduce_max {
 private:
-	T* ArrayA;
-	T* ArrayB;
+	T** matrixA;
+	T** matrixB;
+	int size;
 public:
-	T MaxValue1, MaxValue2;
+	T MaxValue;//Максимальное значение 
+	void operator()(const tbb::blocked_range<size_t>& r)
+	{
+		T** a = matrixA;
+		T** b = matrixB;
+		T val;
+		for (size_t i = r.begin(); i != r.end(); ++i)
+		{
+			for (int j = 0; j < size; j++)
+			{
+				val = a[i][j];
+				if (val > MaxValue)
+					MaxValue = val;
 
-	void operator() (const blocked_range<size_t>& r) {
-		T* a = ArrayA;
-		T* b = ArrayB;
-		T val1, val2;
-
-		for (size_t i = r.begin(); i != r.end(); ++i) {
-			val1 = a[i];
-			val2 = b[i];
-
-			if (MaxValue1 < val1) MaxValue1 = val1;
-			if (MaxValue2 < val2) MaxValue2 = val2;
+				val = b[i][j];
+				if (val > MaxValue)
+					MaxValue = val;
+			}
 		}
 	}
 
-	reduce_max(reduce_max& x, tbb::split) : ArrayA(x.ArrayA), ArrayB(x.ArrayB), MaxValue1(-1000), MaxValue2(-1000) {}
-	void join(const reduce_max& y) {
-		if (y.MaxValue1 > MaxValue1) MaxValue1 = y.MaxValue1;
-		if (y.MaxValue2 > MaxValue2) MaxValue2 = y.MaxValue2;
+	reduce_max(reduce_max& x, tbb::split) : matrixA(x.matrixA), matrixB(x.matrixB), size(x.size), MaxValue(-1000) {}
+
+	void join(const reduce_max& y)
+	{
+		if (y.MaxValue > MaxValue)
+			MaxValue = y.MaxValue;
 	}
 
-	reduce_max(T* A, T* B) : ArrayA(A), ArrayB(B), MaxValue1(-1000), MaxValue2(-1000) {}
+	reduce_max(T** A, T** B, const int length) : matrixA(A), matrixB(B), size(length), MaxValue(-1000) {}
 };
 #pragma endregion
 
@@ -229,7 +242,7 @@ void TotalSum(T**& matrix1, T**& matrix2, T**& unused, int size) {
 			total2 += matrix2[i][j];
 		}
 	}
-	cout << total1 << " " << total2;
+	cout << total1 + total2 << " ";
 	//double time_stop = omp_get_wtime();
 	//return time_stop - time_start;
 }
@@ -258,7 +271,7 @@ void TotalSumOMP(T**& matrix1, T**& matrix2, T**& unused, int size) {
 			total2 += matrix2[i][j];
 		}
 	}
-	cout << total1 << " " << total2;
+	cout << total1 + total2 << " ";
 
 	//double time_stop = omp_get_wtime();
 	//return time_stop - time_start;
@@ -270,15 +283,12 @@ void TotalSumTBB(T**& matrix1, T**& matrix2, T**& unused, int size) {
 
 	//double time_start = omp_get_wtime();
 
-	T total1 = 0, total2 = 0;
+	T total = 0;
 
-	for (int i = 0; i < size; i++) {
-		reduce_total<T> r(matrix1[i], matrix2[i], size);
-		parallel_reduce(blocked_range<size_t>(0, size), r);
-		total1 += r.sumRes1;
-		total2 += r.sumRes2;
-	}
-	cout << total1 << " " << total2;
+	reduce_total<T> totalAB(matrix1, matrix2, size);
+	tbb::parallel_reduce(tbb::blocked_range<size_t>(0, size), totalAB);
+
+	cout << totalAB.total << " ";
 
 	//double time_stop = omp_get_wtime();
 	//return time_stop - time_start;
@@ -302,7 +312,15 @@ void MaxElem(T**& matrix1, T**& matrix2, T**& unused, int size) {
 			if (max2 < matrix1[i][j]) max2 = matrix1[i][j];
 		}
 	}
-	cout << max1 << " " << max2;
+	
+	if (max1 > max2)
+	{
+		cout << max1 << " ";
+	}
+	else
+	{
+		cout << max2 << " ";
+	}
 
 	//double time_stop = omp_get_wtime();
 	//return time_stop - time_start;
@@ -325,7 +343,16 @@ void MaxElemOMP(T**& matrix1, T**& matrix2, T**& unused, int size) {
 			if (max2 < matrix1[i][j]) max2 = matrix1[i][j];
 		}
 	}
-	cout << max1 << " " << max2;
+	
+	if (max1 > max2)
+	{
+		cout << max1 << " ";
+	}
+	else
+	{
+		cout << max2 << " ";
+	}
+
 	//double time_stop = omp_get_wtime();
 	//return time_stop - time_start;
 }
@@ -336,15 +363,13 @@ void MaxElemTBB(T**& matrix1, T**& matrix2, T**& unused, int size) {
 
 	//double time_start = omp_get_wtime();
 
-	double max1 = -1000, max2 = -1000;
+	double max = -1000;
 
-	for (int i = 0; i < size; i++) {
-		reduce_max<T> r(matrix1[i], matrix2[i]);
-		parallel_reduce(blocked_range<size_t>(0, size), r);
-		if (max1 < r.MaxValue1) max1 = r.MaxValue1;
-		if (max2 < r.MaxValue2) max2 = r.MaxValue2;
-	}
-	cout << max1 << " " << max2;
+	reduce_max<T> MaxAB(matrix1, matrix2, size);
+	tbb::parallel_reduce(tbb::blocked_range<size_t>(0, size), MaxAB);
+
+	cout << MaxAB.MaxValue << " ";
+
 	//double time_stop = omp_get_wtime();
 	//return time_stop - time_start;
 }
@@ -524,7 +549,7 @@ void CalcMatrixFuncs()
 
 	resultsFile << endl;
 
-	for (int i = 0; i < 12; i++)
+	for (int i = 8; i < 12; i++)
 	{
 		resultsFile << funcsNames[i];
 		std::cout << funcsNames[i] << endl;
