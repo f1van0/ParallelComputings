@@ -549,7 +549,7 @@ void CalcMatrixFuncs()
 
 	resultsFile << endl;
 
-	for (int i = 8; i < 12; i++)
+	for (int i = 0; i < 12; i++)
 	{
 		resultsFile << funcsNames[i];
 		std::cout << funcsNames[i] << endl;
